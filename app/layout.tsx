@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "geist/font";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 
-const geistSans = Geist({ subsets: ["latin"], variable: "--font-sans" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
+const geistSans = Geist({ variable: "--font-sans" });
+const geistMono = Geist_Mono({ variable: "--font-mono" });
 
 export const metadata: Metadata = {
   title: "College ERP Portal - Student Dashboard",
