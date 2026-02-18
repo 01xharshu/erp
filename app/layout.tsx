@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "geist/font";
+import { Gilroy, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 
-const geistSans = Geist({ variable: "--font-sans" });
-const geistMono = Geist_Mono({ variable: "--font-mono" });
+const gilroy = Gilroy({ subsets: ["latin"], variable: "--font-gilroy", weight: ["400", "500", "600", "700"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
   title: "College ERP Portal - Student Dashboard",
@@ -30,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${gilroy.variable} ${inter.variable} ${jetbrainsMono.variable} font-gilroy`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
           <Toaster position="top-right" />
