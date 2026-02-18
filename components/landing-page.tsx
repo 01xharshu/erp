@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   BookOpen,
   Briefcase,
@@ -80,7 +81,8 @@ export function LandingPage() {
             <GraduationCap className="w-6 h-6 text-primary" />
             <h1 className="font-bold text-lg">College ERP</h1>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            <ThemeToggle />
             <Link href="/login">
               <Button variant="outline">Sign In</Button>
             </Link>

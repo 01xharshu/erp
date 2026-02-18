@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { UserMode, ModeProvider } from "@/lib/mode-context";
 import { ModeSwitcher } from "@/components/mode-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
 import { ModeAwareContent } from "@/components/mode-aware-content";
@@ -26,6 +27,7 @@ function DemoContent() {
               <p className="text-xs text-muted-foreground">Explore features by role</p>
             </div>
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <ModeSwitcher />
               <Link href="/">
                 <Button variant="outline" size="sm">
