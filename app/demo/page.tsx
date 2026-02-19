@@ -19,7 +19,6 @@ function DemoContent() {
   return (
     <ModeProvider initialMode={initialMode}>
       <div className="min-h-screen bg-background">
-        {/* Header Bar */}
         <div className="border-b border-border/40 bg-background/95 backdrop-blur sticky top-0 z-40">
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
             <div>
@@ -38,7 +37,6 @@ function DemoContent() {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="flex">
           <Sidebar />
           <div className="flex-1 md:ml-64">
