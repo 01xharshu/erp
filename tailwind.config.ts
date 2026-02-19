@@ -11,7 +11,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        gilroy: ["var(--font-gilroy)", ...defaultTheme.fontFamily.sans],
+        poppins: ["var(--font-poppins)", ...defaultTheme.fontFamily.sans],
         sans: ["var(--font-sans)", ...defaultTheme.fontFamily.sans],
         mono: ["var(--font-mono)", ...defaultTheme.fontFamily.mono],
       },
