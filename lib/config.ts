@@ -1,8 +1,3 @@
-/**
- * Application configuration
- * Centralized configuration for the ERP system
- */
-
 export const config = {
   app: {
     name: "College ERP Portal",
