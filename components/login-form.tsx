@@ -30,20 +30,35 @@ export function LoginForm() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      // Call MongoDB authentication API
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enrollmentId: enrollmentNo, password }),
+      });
 
-    const success = login({ enrollmentNo, password });
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Login failed");
+        setIsLoading(false);
+        return;
+      }
 
-    if (success) {
-      storeStudentData(mockStudent);
+      const data = await response.json();
+      
+      // Store user data in localStorage
+      login({ enrollmentNo, password });
+      storeStudentData(data.user);
+      
       toast.success("Login successful!");
       
       // Add delay for visual feedback
       await new Promise((resolve) => setTimeout(resolve, 500));
       router.push("/dashboard");
-    } else {
-      toast.error("Invalid enrollment number or password");
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Network error. Please try again.");
     }
 
     setIsLoading(false);
