@@ -20,7 +20,14 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { getStudentData } from "@/lib/auth";
 import { mockStudent } from "@/lib/mockData";
 import { Edit2, Download, FileText, Phone, Mail, MapPin } from "lucide-react";
@@ -180,7 +187,10 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Address</Label>
+                    <Label className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" /> {/* ← MapPin used in edit mode */}
+                      Address
+                    </Label>
                     <Input
                       value={editData?.address}
                       onChange={(e) =>
@@ -221,8 +231,11 @@ export default function ProfilePage() {
                       <p className="font-medium">{studentData.dateOfBirth}</p>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Address</p>
+                  <div className="space-y-1">
+                    <Label className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4" /> {/* ← MapPin used in view mode */}
+                      Address
+                    </Label>
                     <p className="font-medium">{studentData.address}</p>
                   </div>
                 </div>

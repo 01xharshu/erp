@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -18,7 +17,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { mockAssignments } from "@/lib/mockData";
 import {
   FileUp,
@@ -126,7 +132,10 @@ export default function AssignmentsPage() {
             {pendingAssignments.map((assignment) => (
               <Card key={assignment.id}>
                 <AccordionItem value={assignment.id}>
-                  <AccordionTrigger className="px-6">
+                  <AccordionTrigger
+                    className="px-6 cursor-pointer"
+                    onClick={() => setSelectedAssignment(assignment)}
+                  >
                     <div className="flex items-start gap-3 text-left flex-1 mr-4">
                       <FileText className="h-5 w-5 mt-1 text-primary" />
                       <div className="flex-1 min-w-0">
@@ -143,8 +152,8 @@ export default function AssignmentsPage() {
                             isLate(assignment.dueDate)
                               ? "destructive"
                               : daysUntilDue(assignment.dueDate) <= 3
-                                ? "secondary"
-                                : "outline"
+                              ? "secondary"
+                              : "outline"
                           }
                         >
                           {isLate(assignment.dueDate)
@@ -244,7 +253,10 @@ export default function AssignmentsPage() {
           {submittedAssignments.map((assignment) => (
             <Card key={assignment.id}>
               <AccordionItem value={assignment.id}>
-                <AccordionTrigger className="px-6">
+                <AccordionTrigger
+                  className="px-6 cursor-pointer"
+                  onClick={() => setSelectedAssignment(assignment)}
+                >
                   <div className="flex items-start gap-3 text-left flex-1 mr-4">
                     {assignment.status === "Graded" ? (
                       <CheckCircle className="h-5 w-5 mt-1 text-green-600" />
@@ -308,6 +320,65 @@ export default function AssignmentsPage() {
           ))}
         </Accordion>
       </div>
+
+      {/* Selected Assignment Preview */}
+      {selectedAssignment && (
+        <div className="mt-10 border-t pt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Selected Assignment</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedAssignment(null)}
+            >
+              Clear
+            </Button>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{selectedAssignment.title}</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {selectedAssignment.subject} • {selectedAssignment.status}
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Issued Date</p>
+                  <p className="font-medium mt-1">{selectedAssignment.issueDate}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Due Date</p>
+                  <p className="font-medium mt-1">{selectedAssignment.dueDate}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Marks</p>
+                  <p className="font-bold text-primary mt-1">
+                    {selectedAssignment.marks ? `${selectedAssignment.marks}/20` : "—"}
+                  </p>
+                </div>
+              </div>
+
+              {selectedAssignment.feedback && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Faculty Feedback</p>
+                  <div className="bg-muted p-4 rounded-lg text-sm">
+                    {selectedAssignment.feedback}
+                  </div>
+                </div>
+              )}
+
+              {selectedAssignment.submittedFile && (
+                <Button variant="outline" className="gap-2">
+                  <File className="h-4 w-4" />
+                  Download Submitted File
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

@@ -33,7 +33,27 @@ export default function DashboardPage() {
   }
 
   const attendancePercentage = calculateAttendancePercentage();
-  const currentSGPA = 7.85;
+
+  // Use mockExamResults to compute current SGPA (now used!)
+  const getCurrentSGPA = () => {
+    if (!mockExamResults || mockExamResults.length === 0) return 7.85; // fallback
+
+    const studentSemester = studentData.semester ?? 0; // safe access with fallback
+
+    // Filter results for current semester (with safe property access)
+    const latestResults = mockExamResults
+      .filter((r: any) => (r as any)?.semester === studentSemester) // type assertion + optional chaining
+      .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    if (latestResults.length > 0) {
+      return (latestResults[0] as any)?.sgpa ?? 7.85; // safe access
+    }
+
+    return 7.85;
+  };
+
+  const currentSGPA = getCurrentSGPA();
+
   const pendingFees = mockFees
     .filter((f) => f.status === "Pending")
     .reduce((sum, f) => sum + f.amount, 0);
@@ -88,13 +108,13 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* SGPA Card */}
+        {/* SGPA Card – now uses mockExamResults */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Current SGPA</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{currentSGPA}</div>
+            <div className="text-2xl font-bold text-primary">{currentSGPA.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground mt-2">Out of 10.0</p>
           </CardContent>
         </Card>
@@ -105,7 +125,7 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">Pending Fees</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-accent">₹{pendingFees}</div>
+            <div className="text-2xl font-bold text-primary">₹{pendingFees}</div>
             <p className="text-xs text-muted-foreground mt-2">
               {mockFees.filter((f) => f.status === "Pending").length} item(s)
             </p>

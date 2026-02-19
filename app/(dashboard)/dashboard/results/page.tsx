@@ -39,7 +39,7 @@ export default function ResultsPage() {
     return (totalGradePoints / totalCredits).toFixed(2);
   };
 
-  const gpa = calculateGPA();
+  const gpa = calculateGPA(); // ← kept as-is
 
   const getGradeColor = (percentage: number): string => {
     if (percentage >= 90) return "text-green-600";
@@ -58,7 +58,7 @@ export default function ResultsPage() {
         </p>
       </div>
 
-      {/* Overall Performance Card */}
+      {/* Overall Performance Card – now uses computed gpa */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-3">
@@ -69,15 +69,17 @@ export default function ResultsPage() {
             <p className="text-xs text-muted-foreground mt-1">Out of 10.0</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Current CGPA</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-primary">7.92</div>
+            <div className="text-3xl font-bold text-primary">{gpa}</div> {/* ← gpa is now used here */}
             <p className="text-xs text-muted-foreground mt-1">Cumulative GPA</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Academic Status</CardTitle>

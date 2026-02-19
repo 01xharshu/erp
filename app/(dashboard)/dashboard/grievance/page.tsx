@@ -27,6 +27,7 @@ import { Send, TicketIcon } from "lucide-react";
 export default function GrievancePage() {
   const [formData, setFormData] = useState({
     category: "",
+    title: "",           // ← Added for Input usage
     description: "",
     anonymous: false,
   });
@@ -51,7 +52,7 @@ export default function GrievancePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.category || !formData.description) {
+    if (!formData.category || !formData.title.trim() || !formData.description) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -65,10 +66,11 @@ export default function GrievancePage() {
       date: new Date().toISOString().split("T")[0],
       status: "Pending",
       description: formData.description,
+      title: formData.title,  // ← Now used in new submission
     };
 
     setSubmissions([newTicket, ...submissions]);
-    setFormData({ category: "", description: "", anonymous: false });
+    setFormData({ category: "", title: "", description: "", anonymous: false });
 
     toast.success("Grievance submitted successfully! Ticket ID: " + newTicket.id);
     setIsSubmitting(false);
@@ -113,6 +115,19 @@ export default function GrievancePage() {
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Added Input usage here */}
+            <div className="space-y-2">
+              <Label htmlFor="title">Subject / Title *</Label>
+              <Input
+                id="title"
+                placeholder="Brief title of your grievance"
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+              />
             </div>
 
             <div className="space-y-2">

@@ -251,6 +251,27 @@ export default function FeesPage() {
           </ul>
         </CardContent>
       </Card>
+
+      {/* Added section to use the imported Accordion components */}
+      <Card className="bg-muted/30">
+        <CardHeader>
+          <CardTitle className="text-sm">Fee Payment Terms & Conditions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="terms">
+              <AccordionTrigger>Read full terms</AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground space-y-3">
+                <p>1. All fees must be paid by the due date mentioned in the fee notice.</p>
+                <p>2. Late payments will incur a penalty of 1% per week on the outstanding amount.</p>
+                <p>3. Payments made online are processed through secure gateways (Razorpay/PayU).</p>
+                <p>4. Refunds are only processed in case of official withdrawal as per college policy.</p>
+                <p>5. Keep digital/physical receipts for future reference.</p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -34,7 +34,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { mockAttendance, mockSubjects, calculateAttendancePercentage } from "@/lib/mockData";
 import { CheckCircle, XCircle, Calendar, FileUp } from "lucide-react";
 import { toast } from "sonner";
@@ -106,13 +113,18 @@ export default function AttendancePage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Attendance</h1>
-          <p className="text-muted-foreground">
-            Track your attendance and manage leave applications
-          </p>
+      {/* Header with Calendar icon added */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Calendar className="h-8 w-8 text-muted-foreground" /> {/* ← Calendar is now used */}
+          <div>
+            <h1 className="text-3xl font-bold">Attendance</h1>
+            <p className="text-muted-foreground">
+              Track your attendance and manage leave applications
+            </p>
+          </div>
         </div>
+
         <Dialog>
           <DialogTrigger asChild>
             <Button className="gap-2">
