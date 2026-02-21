@@ -70,8 +70,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">
+      <div className="rounded-2xl border border-border/70 bg-gradient-to-r from-primary/12 via-ring/10 to-amber-400/10 p-5">
+        <h1 className="text-2xl font-bold text-foreground md:text-3xl">
           Welcome back, {studentData.name}!
         </h1>
         <p className="text-muted-foreground mt-2">
@@ -82,7 +82,7 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Attendance Card */}
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="transition-transform hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Attendance</CardTitle>
           </CardHeader>
@@ -109,7 +109,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* SGPA Card – now uses mockExamResults */}
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="transition-transform hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Current SGPA</CardTitle>
           </CardHeader>
@@ -120,7 +120,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Pending Fees Card */}
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="transition-transform hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Pending Fees</CardTitle>
           </CardHeader>
@@ -133,7 +133,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Upcoming Exams Card */}
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="transition-transform hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Grade</CardTitle>
           </CardHeader>
@@ -190,7 +190,7 @@ export default function DashboardPage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all"
+                className="flex flex-col items-center gap-2 rounded-xl border border-border/75 bg-background/70 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10"
               >
                 <Icon className="h-6 w-6 text-primary" />
                 <span className="text-xs font-medium text-center">

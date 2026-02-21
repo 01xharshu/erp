@@ -20,10 +20,11 @@ import { mockNotices } from "@/lib/mockData";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { BRAND } from "@/lib/brand";
+import { CommandSearch } from "@/components/command-search";
 
 export function Navbar() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [studentData, setStudentData] = useState<any>(null);
   const [unreadNotices, setUnreadNotices] = useState(0);
@@ -44,6 +45,7 @@ export function Navbar() {
   if (!mounted) return null;
 
   const studentName = studentData?.name || "Student";
+  const appRole = studentData?.role === "faculty" ? "faculty" : "student";
   const studentInitials = studentName
     .split(" ")
     .map((n: string) => n[0])
@@ -51,8 +53,8 @@ export function Navbar() {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-      <div className="flex items-center justify-between gap-2 px-4 py-3 pl-16 md:pl-4">
+    <header className="sticky top-0 z-30 w-full border-b border-border/70 bg-card/95 backdrop-blur-xl">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 pl-16 md:px-5 md:pl-5">
         {/* Left - App Info / Semester */}
         <div className="min-w-0">
           <div className="md:hidden">
@@ -61,7 +63,7 @@ export function Navbar() {
           </div>
           <div className="hidden md:flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Semester:</span>
-            <Badge variant="secondary">
+            <Badge variant="secondary" className="bg-secondary/80">
               {studentData?.semester || 3} - {studentData?.year || 2} Year
             </Badge>
           </div>
@@ -76,14 +78,16 @@ export function Navbar() {
 
         {/* Right - Actions */}
         <div className="ml-auto flex items-center gap-1.5 md:gap-2">
+          <CommandSearch role={appRole} />
+
           {/* Theme Toggle */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="hover:bg-muted"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            className="rounded-xl hover:bg-accent/70"
           >
-            {theme === "dark" ? (
+            {resolvedTheme === "dark" ? (
               <Sun className="h-5 w-5" />
             ) : (
               <Moon className="h-5 w-5" />
@@ -94,7 +98,7 @@ export function Navbar() {
           {/* Notifications */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative rounded-xl hover:bg-accent/70">
                 <Bell className="h-5 w-5" />
                 {unreadNotices > 0 && (
                   <Badge
@@ -148,8 +152,8 @@ export function Navbar() {
           {/* Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent/70">
+                <Avatar className="h-8 w-8 border border-border/70">
                   <AvatarImage src={studentData?.photoURL} alt={studentName} />
                   <AvatarFallback>{studentInitials}</AvatarFallback>
                 </Avatar>

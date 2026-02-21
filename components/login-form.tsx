@@ -69,112 +69,117 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 px-4 py-6 sm:py-10">
-      <div className="mx-auto flex w-full max-w-md items-center justify-between pb-4">
-        <Button asChild variant="ghost" className="justify-start gap-2 px-2">
-          <Link href="/">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
-          </Link>
-        </Button>
-      </div>
+    <div className="relative min-h-screen overflow-hidden px-4 py-6 sm:py-10">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(16,185,129,0.22),transparent_32%),radial-gradient(circle_at_84%_12%,rgba(14,165,233,0.2),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(245,158,11,0.14),transparent_36%)]" />
+      <div className="pointer-events-none absolute inset-0 app-shell-grid opacity-40" />
 
-      <div className="flex items-center justify-center">
-        <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-3">
-          <div className="flex justify-center mb-2">
-            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Lock className="h-6 w-6 text-primary" />
+      <div className="relative mx-auto max-w-5xl">
+        <div className="mb-4 flex w-full items-center justify-start">
+          <Button asChild variant="ghost" className="justify-start gap-2 px-2">
+            <Link href="/">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </Link>
+          </Button>
+        </div>
+
+        <div className="grid items-center gap-6 lg:grid-cols-[1fr_430px]">
+          <div className="hidden rounded-3xl border border-border/70 bg-card/60 p-8 shadow-[0_28px_50px_-34px_rgba(2,6,23,0.75)] backdrop-blur-xl lg:block">
+            <p className="text-sm font-semibold text-primary">{BRAND.tagline}</p>
+            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-foreground">{BRAND.fullName}</h1>
+            <p className="mt-4 max-w-md text-sm text-muted-foreground">
+              One secure login for students, faculty, and administrators. Use your email or unique ID with password.
+            </p>
+            <div className="mt-7 grid gap-3">
+              {["Email or Unique ID authentication", "Role-based dashboard access", "Fee, attendance, and schedule visibility"].map((item) => (
+                <div key={item} className="rounded-xl border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground/90">
+                  {item}
+                </div>
+              ))}
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">{BRAND.fullName}</CardTitle>
-          <CardDescription className="text-center">
-            Login with Email or Unique ID
-          </CardDescription>
-        </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            {/* Email / ID Field */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Email or Unique ID
-              </label>
-              <Input
-                type="text"
-                placeholder="EN2024001 or admin@college.ac.in"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                disabled={isLoading}
-                className="bg-input border-input"
-              />
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                <Lock className="h-4 w-4" />
-                Password
-              </label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  className="bg-input border-input pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
+          <Card className="w-full border-border/75 bg-card/80 shadow-[0_30px_60px_-35px_rgba(2,6,23,0.75)] backdrop-blur-xl">
+            <CardHeader className="space-y-3">
+              <div className="mb-1 flex justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/25 to-ring/25 text-primary">
+                  <Lock className="h-6 w-6" />
+                </div>
               </div>
-            </div>
+              <CardTitle className="text-center text-2xl">{BRAND.fullName}</CardTitle>
+              <CardDescription className="text-center">
+                Login with Email or Unique ID
+              </CardDescription>
+            </CardHeader>
 
-            {/* Remember Me */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="remember"
-                checked={rememberMe}
-                onCheckedChange={(checked) =>
-                  setRememberMe(checked as boolean)
-                }
-                disabled={isLoading}
-              />
-              <label
-                htmlFor="remember"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-              >
-                Remember me
-              </label>
-            </div>
+            <CardContent>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <User className="h-4 w-4" />
+                    Email or Unique ID
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="EN2024001 or admin@college.ac.in"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    disabled={isLoading}
+                    className="bg-background/80"
+                  />
+                </div>
 
-            {/* Login Button */}
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              {isLoading ? "Logging in..." : "Login"}
-            </Button>
-          </form>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Lock className="h-4 w-4" />
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isLoading}
+                      className="bg-background/80 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
 
-          {/* Footer Info */}
-          <div className="mt-6 pt-4 border-t border-border text-center text-xs text-muted-foreground">
-            <p>For support, contact IT Support at {BRAND.supportEmail}</p>
-          </div>
-        </CardContent>
-        </Card>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                    disabled={isLoading}
+                  />
+                  <label
+                    htmlFor="remember"
+                    className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Remember me
+                  </label>
+                </div>
+
+                <Button type="submit" disabled={isLoading} className="w-full">
+                  {isLoading ? "Logging in..." : "Login"}
+                </Button>
+              </form>
+
+              <div className="mt-6 border-t border-border/70 pt-4 text-center text-xs text-muted-foreground">
+                <p>For support, contact IT Support at {BRAND.supportEmail}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

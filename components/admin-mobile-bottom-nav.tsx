@@ -44,8 +44,8 @@ export function AdminMobileBottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur md:hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-      <ul className="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 pt-2">
+    <nav className="fixed bottom-[max(0.25rem,env(safe-area-inset-bottom))] left-1/2 z-30 w-[calc(100%-0.9rem)] max-w-md -translate-x-1/2 rounded-2xl border border-border/75 bg-card/96 p-1.5 shadow-[0_18px_40px_-25px_rgba(2,6,23,0.75)] backdrop-blur-xl md:hidden">
+      <ul className="mx-auto grid grid-cols-4 gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.match(pathname);
@@ -55,14 +55,14 @@ export function AdminMobileBottomNav() {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-medium transition-colors",
+                  "flex h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-medium leading-none transition-all",
                   isActive
-                    ? "bg-primary/12 text-primary"
-                    : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                    ? "bg-gradient-to-b from-primary/18 to-ring/12 text-primary"
+                    : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                 )}
               >
-                <Icon className="h-4 w-4" />
-                <span>{item.label}</span>
+                <Icon className="h-[17px] w-[17px] shrink-0" />
+                <span className="leading-none">{item.label}</span>
               </Link>
             </li>
           );

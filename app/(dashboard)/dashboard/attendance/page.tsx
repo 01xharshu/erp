@@ -84,15 +84,15 @@ export default function AttendancePage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "P":
-        return "bg-green-100 text-green-800";
+        return "border border-emerald-500/25 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300";
       case "A":
-        return "bg-red-100 text-red-800";
+        return "border border-rose-500/25 bg-rose-500/15 text-rose-700 dark:text-rose-300";
       case "L":
-        return "bg-blue-100 text-blue-800";
+        return "border border-sky-500/25 bg-sky-500/15 text-sky-700 dark:text-sky-300";
       case "M":
-        return "bg-purple-100 text-purple-800";
+        return "border border-violet-500/25 bg-violet-500/15 text-violet-700 dark:text-violet-300";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "border border-border/70 bg-muted/70 text-muted-foreground";
     }
   };
 
@@ -114,7 +114,7 @@ export default function AttendancePage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header with Calendar icon added */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-gradient-to-r from-primary/12 via-ring/10 to-amber-400/10 p-5">
         <div className="flex items-center gap-3">
           <Calendar className="h-8 w-8 text-muted-foreground" /> {/* ← Calendar is now used */}
           <div>
@@ -170,7 +170,7 @@ export default function AttendancePage() {
       </div>
 
       {/* Overall Attendance Card */}
-      <Card className="bg-gradient-to-r from-primary/10 to-primary/5">
+      <Card className="bg-gradient-to-r from-primary/14 via-ring/10 to-background/40">
         <CardHeader>
           <CardTitle>Overall Attendance</CardTitle>
           <CardDescription>Current semester attendance percentage</CardDescription>
@@ -319,9 +319,9 @@ export default function AttendancePage() {
                     <div key={type} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {idx === 0 ? (
-                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                         ) : (
-                          <XCircle className="h-5 w-5 text-red-600" />
+                          <XCircle className="h-5 w-5 text-rose-600 dark:text-rose-400" />
                         )}
                         <span className="font-medium text-sm">{type}</span>
                       </div>

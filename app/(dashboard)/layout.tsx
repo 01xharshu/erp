@@ -11,18 +11,20 @@ export default function DashboardLayout({
 }) {
   return (
     <ProtectedRoute>
-      <div className="flex min-h-dvh bg-background overflow-x-hidden">
-        {/* Sidebar */}
-        <Sidebar />
+      <div className="app-shell-bg app-shell-grid min-h-dvh p-2 md:p-4">
+        <div className="relative mx-auto min-h-[calc(100dvh-1rem)] max-w-[1600px] overflow-hidden rounded-[30px] border border-border/75 bg-background/92 shadow-[0_24px_65px_-42px_rgba(2,6,23,0.75)] backdrop-blur-xl md:min-h-[calc(100dvh-2rem)]">
+          <div className="flex min-h-full overflow-x-hidden">
+            <Sidebar />
 
-        {/* Main Content */}
-        <main className="flex-1 md:ml-64 min-w-0">
-          {/* Navbar */}
-          <Navbar />
+            <main className="min-w-0 flex-1 md:ml-64">
+              <Navbar />
 
-          {/* Page Content */}
-          <div className="p-4 pb-24 md:p-6 md:pb-6">{children}</div>
-        </main>
+              <div className="p-3 pb-24 md:p-5 md:pb-6">
+                <div className="app-content-surface mx-auto w-full max-w-[1280px]">{children}</div>
+              </div>
+            </main>
+          </div>
+        </div>
         <MobileBottomNav />
         <ChatbotWidget />
       </div>

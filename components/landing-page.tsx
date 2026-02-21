@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { DM_Serif_Display, Space_Grotesk } from "next/font/google";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
@@ -34,9 +33,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 import { BRAND } from "@/lib/brand";
 import { NucleusArchitecture } from "@/components/nucleus-architecture";
-
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
-const dmSerif = DM_Serif_Display({ subsets: ["latin"], weight: "400", variable: "--font-dm-serif" });
 
 type RoleKey = "student" | "faculty" | "admin";
 
@@ -219,9 +215,9 @@ const roleButtonClass = (role: RoleKey, activeRole: RoleKey): string => {
   if (!active) {
     return "text-muted-foreground hover:bg-muted/70 hover:text-foreground";
   }
-  if (role === "student") return "bg-emerald-600 text-white shadow-sm";
-  if (role === "faculty") return "bg-sky-600 text-white shadow-sm";
-  return "bg-amber-600 text-white shadow-sm";
+  if (role === "student") return "bg-primary text-primary-foreground shadow-sm";
+  if (role === "faculty") return "bg-primary text-primary-foreground shadow-sm";
+  return "bg-primary text-primary-foreground shadow-sm";
 };
 
 function CreatorTag({
@@ -238,7 +234,7 @@ function CreatorTag({
   href?: string;
 }) {
   const triggerClass =
-    "inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-semibold text-foreground underline-offset-4 transition hover:text-emerald-700 hover:underline dark:hover:text-emerald-300";
+    "inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-semibold text-foreground underline-offset-4 transition hover:text-primary hover:underline";
 
   return (
     <span className="group relative inline-flex items-center">
@@ -253,13 +249,13 @@ function CreatorTag({
       )}
 
       <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-[min(90vw,18rem)] -translate-x-1/2 translate-y-1 scale-95 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:scale-100 group-focus-within:opacity-100">
-        <div className="rounded-2xl bg-[linear-gradient(135deg,rgba(16,185,129,0.55),rgba(14,165,233,0.52),rgba(245,158,11,0.45))] p-[1px] shadow-[0_28px_60px_-28px_rgba(2,6,23,0.8)]">
+        <div className="rounded-2xl bg-[linear-gradient(135deg,hsl(var(--primary)/0.6),hsl(var(--ring)/0.5),hsl(var(--accent)/0.75))] p-[1px] shadow-[0_28px_60px_-28px_rgba(2,6,23,0.8)]">
           <div className="relative overflow-hidden rounded-[15px] border border-white/50 bg-background/90 px-3 py-3 backdrop-blur-xl dark:border-white/15 dark:bg-slate-950/85">
-            <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-emerald-400/20 blur-2xl" />
-            <div className="absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-sky-400/20 blur-2xl" />
+            <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-primary/20 blur-2xl" />
+            <div className="absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-ring/20 blur-2xl" />
 
             <div className="relative flex items-start gap-3">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500/45 via-sky-500/40 to-amber-400/45 p-[1.5px]">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/45 via-ring/40 to-accent/45 p-[1.5px]">
                 <div
                   className="h-full w-full rounded-[10px] border border-white/40 bg-cover bg-center"
                   style={{ backgroundImage: `url('${imageUrl}')` }}
@@ -269,7 +265,7 @@ function CreatorTag({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold tracking-tight">{fullName}</p>
                 <p className="text-xs text-muted-foreground">{role}</p>
-                <span className="mt-1.5 inline-flex items-center rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                <span className="mt-1.5 inline-flex items-center rounded-full border border-primary/35 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                   VERIFIED PROFILE
                 </span>
               </div>
@@ -302,14 +298,12 @@ export function LandingPage() {
   const activePreview = useMemo(() => rolePreviewMap[activeRole], [activeRole]);
 
   return (
-    <div className={cn("relative min-h-screen overflow-hidden", spaceGrotesk.className)}>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(16,185,129,0.20),transparent_38%),radial-gradient(circle_at_86%_14%,rgba(14,165,233,0.20),transparent_35%),radial-gradient(circle_at_40%_88%,rgba(245,158,11,0.20),transparent_36%),linear-gradient(180deg,#f7fafc_0%,#f8faf5_45%,#fbf7ef_100%)] dark:bg-[radial-gradient(circle_at_12%_16%,rgba(16,185,129,0.22),transparent_38%),radial-gradient(circle_at_86%_14%,rgba(14,165,233,0.22),transparent_35%),radial-gradient(circle_at_40%_88%,rgba(245,158,11,0.2),transparent_36%),linear-gradient(180deg,#05080d_0%,#080d12_55%,#0f0e0a_100%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(120,120,120,0.09)_1px,transparent_1px),linear-gradient(to_bottom,rgba(120,120,120,0.09)_1px,transparent_1px)] bg-[size:34px_34px]" />
-
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/55 backdrop-blur-xl">
+    <div className="app-shell-bg app-shell-grid min-h-dvh p-2 md:p-4">
+      <div className="relative mx-auto min-h-[calc(100dvh-1rem)] max-w-[1600px] overflow-hidden rounded-[30px] border border-border/75 bg-background/92 shadow-[0_24px_65px_-42px_rgba(2,6,23,0.75)] backdrop-blur-xl md:min-h-[calc(100dvh-2rem)]">
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-card/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/15 p-2 text-emerald-700 dark:text-emerald-300">
+            <div className="rounded-xl border border-primary/30 bg-primary/15 p-2 text-primary">
               <GraduationCap className="h-5 w-5" />
             </div>
             <div>
@@ -323,7 +317,7 @@ export function LandingPage() {
             <Button asChild size="sm" variant="outline">
               <Link href="/demo">Demo</Link>
             </Button>
-            <Button asChild size="sm" className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">
+            <Button asChild size="sm" className="gap-2">
               <Link href="/login">
                 Login
                 <ArrowRight className="h-4 w-4" />
@@ -336,14 +330,14 @@ export function LandingPage() {
       <main className="relative z-10">
         <section className="mx-auto grid max-w-7xl gap-8 px-4 pb-14 pt-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-8 lg:pb-20 lg:pt-16">
           <motion.div initial="hidden" animate="show" variants={reveal} transition={{ duration: 0.45 }} className="space-y-6">
-            <Badge className="w-fit border border-emerald-500/30 bg-emerald-500/15 text-emerald-800 dark:text-emerald-200" variant="secondary">
+            <Badge className="w-fit border border-primary/30 bg-primary/15 text-primary" variant="secondary">
               Next-generation campus platform
             </Badge>
 
-            <h1 className={cn("text-4xl leading-tight tracking-tight sm:text-5xl lg:text-6xl", dmSerif.className)}>
+            <h1 className="text-4xl leading-tight tracking-tight sm:text-5xl lg:text-6xl">
               Designed like a modern product,
               <br />
-              <span className="bg-gradient-to-r from-emerald-600 via-sky-600 to-amber-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-ring to-primary bg-clip-text text-transparent">
                 built for real college operations.
               </span>
             </h1>
@@ -354,7 +348,7 @@ export function LandingPage() {
             </p>
 
             <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg" className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">
+              <Button asChild size="lg" className="gap-2">
                 <Link href="/login">
                   Launch Portal
                   <ArrowRight className="h-4 w-4" />
@@ -460,7 +454,7 @@ export function LandingPage() {
                             key={module.name}
                             className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/75 px-2.5 py-1 text-xs"
                           >
-                            <Icon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                            <Icon className="h-3.5 w-3.5 text-primary" />
                             {module.name}
                           </span>
                         );
@@ -492,7 +486,7 @@ export function LandingPage() {
             transition={{ duration: 0.35 }}
             className="mb-5"
           >
-            <h2 className={cn("text-3xl tracking-tight", dmSerif.className)}>Product-Level Visual Experience</h2>
+            <h2 className="text-3xl tracking-tight">Product-Level Visual Experience</h2>
             <p className="text-sm text-muted-foreground">Not a template. A focused interface designed for execution.</p>
           </motion.div>
 
@@ -522,7 +516,7 @@ export function LandingPage() {
                             key={`${item.name}-${index}`}
                             className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-2 text-xs font-medium"
                           >
-                            <Icon className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                            <Icon className="h-3.5 w-3.5 text-primary" />
                             {item.name}
                           </div>
                         );
@@ -548,7 +542,7 @@ export function LandingPage() {
               ].map((feature) => (
                 <Card key={feature} className="border-border/70 bg-background/75">
                   <CardContent className="flex items-start gap-3 p-4">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
                     <p className="text-sm">{feature}</p>
                   </CardContent>
                 </Card>
@@ -565,7 +559,7 @@ export function LandingPage() {
             transition={{ duration: 0.35 }}
             className="mb-5"
           >
-            <h2 className={cn("text-3xl tracking-tight", dmSerif.className)}>How {BRAND.name} Runs In Practice</h2>
+            <h2 className="text-3xl tracking-tight">How {BRAND.name} Runs In Practice</h2>
             <p className="text-sm text-muted-foreground">A practical rollout flow for teams, not just a UI showcase.</p>
           </motion.div>
 
@@ -585,7 +579,7 @@ export function LandingPage() {
                       <div className="mb-2 flex items-center justify-between">
                         <span className="text-xs font-semibold tracking-wide text-muted-foreground">Step {item.step}</span>
                         <span className="rounded-lg border border-border/70 bg-background/80 p-2">
-                          <Icon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                          <Icon className="h-4 w-4 text-primary" />
                         </span>
                       </div>
                       <CardTitle className="text-base">{item.title}</CardTitle>
@@ -619,7 +613,7 @@ export function LandingPage() {
                     return (
                       <div key={pillar.title} className="rounded-xl border border-border/70 bg-muted/30 p-3">
                         <p className="flex items-center gap-2 text-sm font-semibold">
-                          <Icon className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                          <Icon className="h-4 w-4 text-primary" />
                           {pillar.title}
                         </p>
                         <p className="mt-1 text-sm text-muted-foreground">{pillar.description}</p>
@@ -663,14 +657,14 @@ export function LandingPage() {
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.35 }}
           >
-            <Card className="border-emerald-500/25 bg-gradient-to-r from-emerald-500/15 via-sky-500/10 to-amber-500/10">
+            <Card className="border-primary/25 bg-gradient-to-r from-primary/15 via-ring/10 to-accent/35">
               <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-lg font-semibold">Ready to run {BRAND.name} like a modern SaaS product?</p>
                   <p className="text-sm text-muted-foreground">Use seeded credentials and start from live modules immediately.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button asChild className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">
+                  <Button asChild className="gap-2">
                     <Link href="/login">
                       Open Login
                       <ArrowRight className="h-4 w-4" />
@@ -705,6 +699,7 @@ export function LandingPage() {
           </div>
         </section>
       </main>
+      </div>
     </div>
   );
 }

@@ -17,6 +17,8 @@ import {
   X,
   Clock,
   Home,
+  GraduationCap,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/auth";
@@ -42,6 +44,7 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const isDemoMode = pathname.startsWith("/demo");
 
   const handleLogout = () => {
     logout();
@@ -52,12 +55,12 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Menu Button */}
-      <div className="md:hidden fixed top-[max(0.75rem,env(safe-area-inset-top))] left-4 z-40">
+      <div className="md:hidden fixed top-[max(0.75rem,env(safe-area-inset-top))] left-4 z-[95]">
         <Button
           variant="outline"
           size="icon"
           onClick={() => setIsOpen(!isOpen)}
-          className="h-10 w-10 rounded-full bg-background/90 backdrop-blur"
+          className="h-10 w-10 rounded-full border-border/70 bg-card shadow-sm backdrop-blur dark:bg-card/85"
         >
           {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
@@ -66,7 +69,7 @@ export function Sidebar() {
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          className="fixed inset-0 z-[88] bg-black/50 md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -74,20 +77,27 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-full w-64 bg-card border-r border-border transition-transform duration-300 z-40",
+          "fixed left-0 top-0 z-[90] h-full w-64 border-r border-border/70 bg-card backdrop-blur-xl transition-transform duration-300 dark:bg-card/92 md:absolute md:inset-y-0 md:left-0",
           "md:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Logo Section */}
-          <div className="p-6 border-b border-border">
-            <h1 className="text-xl font-bold text-primary">{BRAND.name}</h1>
-            <p className="text-xs text-muted-foreground mt-1">Student Workspace</p>
+          <div className="border-b border-border/70 p-5">
+            <div className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-ring/10 to-amber-400/10 p-3">
+              <div className="rounded-xl bg-primary/15 p-2 text-primary">
+                <GraduationCap className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="truncate text-base font-semibold text-foreground">{BRAND.name}</h1>
+                <p className="text-[11px] text-muted-foreground">Student Workspace</p>
+              </div>
+            </div>
           </div>
 
           {/* Menu Items */}
-          <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+          <nav className="relative flex-1 space-y-1.5 overflow-y-auto p-3">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
@@ -97,25 +107,40 @@ export function Sidebar() {
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
                     isActive
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-foreground/70 hover:text-foreground hover:bg-muted"
+                      ? "bg-gradient-to-r from-primary/20 via-ring/15 to-transparent text-primary shadow-sm"
+                      : "text-foreground/70 hover:bg-accent/70 hover:text-foreground"
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className={cn("h-[18px] w-[18px]", isActive ? "text-primary" : "text-muted-foreground")} />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
+
+            {isDemoMode && (
+              <>
+                <div className="pointer-events-none absolute inset-x-2 bottom-2 top-[46%] rounded-2xl bg-gradient-to-b from-background/0 via-background/55 to-background/95 backdrop-blur-[6px]" />
+                <div className="pointer-events-none absolute inset-x-4 top-[58%] rounded-2xl border border-border/75 bg-card p-3 text-center shadow-[0_14px_28px_-20px_rgba(2,6,23,0.75)] backdrop-blur-xl dark:bg-card/82">
+                  <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/14 text-primary">
+                    <Lock className="h-4 w-4" />
+                  </div>
+                  <p className="text-xs font-semibold text-foreground">Demo Preview</p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                    Login to unlock full navigation and module controls.
+                  </p>
+                </div>
+              </>
+            )}
           </nav>
 
           {/* Logout Button */}
-          <div className="p-4 border-t border-border">
+          <div className="border-t border-border/70 p-4">
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="w-full justify-start gap-2 rounded-xl border-destructive/35 text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
               <LogOut className="h-4 w-4" />
               Logout

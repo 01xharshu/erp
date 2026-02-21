@@ -59,15 +59,15 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Welcome back, Admin</h1>
+      <div className="rounded-2xl border border-border/70 bg-gradient-to-r from-primary/12 via-ring/10 to-amber-400/10 p-5">
+        <h1 className="text-2xl font-bold text-foreground md:text-3xl">Welcome back, Admin</h1>
         <p className="text-muted-foreground mt-2">
           Manage students, faculty, and platform access from one place
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="transition-transform hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
           </CardHeader>
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="transition-transform hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Students</CardTitle>
           </CardHeader>
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="transition-transform hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Faculty</CardTitle>
           </CardHeader>
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="transition-transform hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">System Health</CardTitle>
           </CardHeader>
@@ -111,7 +111,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="transition-transform hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Collected</CardTitle>
           </CardHeader>
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="transition-transform hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Pending Fees</CardTitle>
           </CardHeader>
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="transition-transform hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Overdue Items</CardTitle>
           </CardHeader>
@@ -153,35 +153,35 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
             <Link
               href="/admin/students"
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all"
+              className="flex flex-col items-center gap-2 rounded-xl border border-border/75 bg-background/70 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10"
             >
               <Users className="h-6 w-6 text-primary" />
               <span className="text-xs font-medium text-center">Manage Students</span>
             </Link>
             <Link
               href="/admin/faculty"
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all"
+              className="flex flex-col items-center gap-2 rounded-xl border border-border/75 bg-background/70 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10"
             >
               <BookOpen className="h-6 w-6 text-primary" />
               <span className="text-xs font-medium text-center">Manage Faculty</span>
             </Link>
             <Link
               href="/admin/students"
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all"
+              className="flex flex-col items-center gap-2 rounded-xl border border-border/75 bg-background/70 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10"
             >
               <UserPlus className="h-6 w-6 text-primary" />
               <span className="text-xs font-medium text-center">Add New Student</span>
             </Link>
             <Link
               href="/admin/faculty"
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all"
+              className="flex flex-col items-center gap-2 rounded-xl border border-border/75 bg-background/70 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10"
             >
               <UserPlus className="h-6 w-6 text-primary" />
               <span className="text-xs font-medium text-center">Add New Faculty</span>
             </Link>
             <Link
               href="/admin/fees"
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all"
+              className="flex flex-col items-center gap-2 rounded-xl border border-border/75 bg-background/70 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10"
             >
               <IndianRupee className="h-6 w-6 text-primary" />
               <span className="text-xs font-medium text-center">Manage Fees</span>

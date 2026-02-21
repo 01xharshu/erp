@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getUserData, logout } from "@/lib/auth";
 import { toast } from "sonner";
 import { BRAND } from "@/lib/brand";
+import { CommandSearch } from "@/components/command-search";
 
 interface AdminUser {
   name?: string;
@@ -27,7 +28,7 @@ interface AdminUser {
 
 export function AdminNavbar() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [adminData, setAdminData] = useState<AdminUser | null>(null);
 
@@ -56,8 +57,8 @@ export function AdminNavbar() {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-      <div className="flex items-center justify-between gap-2 px-4 py-3 pl-16 md:pl-4">
+    <header className="sticky top-0 z-30 w-full border-b border-border/70 bg-card/95 backdrop-blur-xl">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 pl-16 md:px-5 md:pl-5">
         <div className="min-w-0">
           <div className="md:hidden">
             <p className="truncate text-sm font-semibold text-foreground">{BRAND.adminConsoleName}</p>
@@ -65,7 +66,7 @@ export function AdminNavbar() {
           </div>
           <div className="hidden md:flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Access:</span>
-            <Badge variant="secondary">Administrator</Badge>
+            <Badge variant="secondary" className="bg-secondary/80">Administrator</Badge>
           </div>
         </div>
 
@@ -74,20 +75,22 @@ export function AdminNavbar() {
         </div>
 
         <div className="ml-auto flex items-center gap-1.5 md:gap-2">
+          <CommandSearch role="admin" />
+
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="hover:bg-muted"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            className="rounded-xl hover:bg-accent/70"
           >
-            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            {resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             <span className="sr-only">Toggle theme</span>
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent/70">
+                <Avatar className="h-8 w-8 border border-border/70">
                   <AvatarFallback>{initials || "A"}</AvatarFallback>
                 </Avatar>
               </Button>

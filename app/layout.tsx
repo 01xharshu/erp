@@ -75,7 +75,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#1f2937",
+  themeColor: "#0F8A66",
 };
 
 export default function RootLayout({
@@ -90,7 +90,7 @@ export default function RootLayout({
       className={googleSans.variable}  // Applies the font var globally
     >
       <body className="font-sans antialiased">  {/* font-sans now uses Google Sans via var */}
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
           <Toaster position="top-right" />
         </ThemeProvider>
