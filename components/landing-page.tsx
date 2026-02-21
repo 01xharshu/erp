@@ -367,7 +367,7 @@ export function LandingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.12 + index * 0.08, duration: 0.3 }}
                 >
-                  <Card className="border-border/70 bg-background/65 shadow-sm backdrop-blur">
+                  <Card className="border-border/70 bg-background/65 py-3 shadow-sm backdrop-blur">
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">{item.label}</p>
                       <p className="mt-1 text-xl font-semibold">{item.value}</p>
@@ -402,7 +402,7 @@ export function LandingPage() {
               </CardHeader>
 
               <CardContent className="relative space-y-4 p-5">
-                <div className="grid grid-cols-3 gap-2 rounded-xl border border-border/70 bg-muted/30 p-1">
+                <div className="grid grid-cols-3 gap-2 rounded-3xl border border-border/70 bg-muted/30 my-2 p-1">
                   {(["student", "faculty", "admin"] as RoleKey[]).map((role) => (
                     <button
                       key={role}
