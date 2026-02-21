@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Lock, User } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Lock, User } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { setAuthSession } from "@/lib/auth";
+import { BRAND } from "@/lib/brand";
 
 export function LoginForm() {
   const router = useRouter();
@@ -68,15 +69,25 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20 px-4">
-      <Card className="w-full max-w-md shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 px-4 py-6 sm:py-10">
+      <div className="mx-auto flex w-full max-w-md items-center justify-between pb-4">
+        <Button asChild variant="ghost" className="justify-start gap-2 px-2">
+          <Link href="/">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Link>
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-center">
+        <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-3">
           <div className="flex justify-center mb-2">
             <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
               <Lock className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">College ERP Portal</CardTitle>
+          <CardTitle className="text-2xl text-center">{BRAND.fullName}</CardTitle>
           <CardDescription className="text-center">
             Login with Email or Unique ID
           </CardDescription>
@@ -92,7 +103,7 @@ export function LoginForm() {
               </label>
               <Input
                 type="text"
-                placeholder="EN2024001 or admin@college.edu"
+                placeholder="EN2024001 or admin@college.ac.in"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 disabled={isLoading}
@@ -156,24 +167,15 @@ export function LoginForm() {
             >
               {isLoading ? "Logging in..." : "Login"}
             </Button>
-
-            {/* OTP Link */}
-            <div className="text-center">
-              <Link
-                href="#"
-                className="text-sm text-primary hover:underline"
-              >
-                Login with OTP
-              </Link>
-            </div>
           </form>
 
           {/* Footer Info */}
           <div className="mt-6 pt-4 border-t border-border text-center text-xs text-muted-foreground">
-            <p>For support, contact IT Support at support@college.ac.in</p>
+            <p>For support, contact IT Support at {BRAND.supportEmail}</p>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

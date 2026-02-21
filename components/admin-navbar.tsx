@@ -17,6 +17,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getUserData, logout } from "@/lib/auth";
 import { toast } from "sonner";
+import { BRAND } from "@/lib/brand";
 
 interface AdminUser {
   name?: string;
@@ -55,18 +56,24 @@ export function AdminNavbar() {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-card border-b border-border">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="hidden md:flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Access:</span>
-          <Badge variant="secondary">Administrator</Badge>
+    <header className="sticky top-0 z-30 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 pl-16 md:pl-4">
+        <div className="min-w-0">
+          <div className="md:hidden">
+            <p className="truncate text-sm font-semibold text-foreground">{BRAND.adminConsoleName}</p>
+            <p className="truncate text-xs text-muted-foreground">{adminUniqueId}</p>
+          </div>
+          <div className="hidden md:flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Access:</span>
+            <Badge variant="secondary">Administrator</Badge>
+          </div>
         </div>
 
         <div className="hidden lg:block text-center">
-          <h1 className="text-sm font-semibold text-foreground">College ERP Admin Console</h1>
+          <h1 className="text-sm font-semibold text-foreground">{BRAND.adminConsoleName}</h1>
         </div>
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="ml-auto flex items-center gap-1.5 md:gap-2">
           <Button
             variant="ghost"
             size="icon"

@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/api-auth";
 import { createStudent, deleteStudent, findAnyUserByEmail, findStudentByEnrollment, getAllStudents, updateStudent, updateStudentPassword } from "@/lib/db-models";
+import { getNextEnrollmentNo } from "@/lib/id-rules";
 import { getDatabase } from "@/lib/mongodb";
 
 const toNumber = (value: unknown, fallback: number): number => {
@@ -62,17 +63,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const enrollmentNo = String(body.enrollmentNo ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
     const firstName = String(body.firstName ?? "").trim();
     const lastName = String(body.lastName ?? "").trim();
     const password = String(body.password ?? "");
 
-    if (!enrollmentNo || !email || !firstName || !lastName || !password) {
+    if (!email || !firstName || !lastName || !password) {
       return NextResponse.json(
         {
           success: false,
-          message: "Enrollment No, email, name, and password are required",
+          message: "Email, name, and password are required",
         },
         { status: 400 }
       );
@@ -80,20 +80,7 @@ export async function POST(request: NextRequest) {
 
     const db = await getDatabase();
 
-    const [existingByEnrollment, existingByEmail] = await Promise.all([
-      findStudentByEnrollment(db, enrollmentNo),
-      findAnyUserByEmail(db, email),
-    ]);
-
-    if (existingByEnrollment) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Enrollment number already exists",
-        },
-        { status: 409 }
-      );
-    }
+    const existingByEmail = await findAnyUserByEmail(db, email);
 
     if (existingByEmail) {
       return NextResponse.json(
@@ -106,33 +93,58 @@ export async function POST(request: NextRequest) {
     }
 
     const semester = toNumber(body.semester, 1);
-    const student = await createStudent(db, {
-      enrollmentNo,
-      email,
-      firstName,
-      lastName,
-      password,
-      phone: String(body.phone ?? "").trim(),
-      department: String(body.department ?? "General").trim(),
-      semester,
-      year: toNumber(body.year, toYearFromSemester(semester)),
-      cgpa: toNumber(body.cgpa, 0),
-      rollNo: String(body.rollNo ?? enrollmentNo.slice(-3)).trim(),
-      program: String(body.program ?? "").trim() || undefined,
-      dateOfBirth: String(body.dateOfBirth ?? "").trim() || undefined,
-      address: String(body.address ?? "").trim() || undefined,
-      guardianName: String(body.guardianName ?? "").trim() || undefined,
-      guardianPhone: String(body.guardianPhone ?? "").trim() || undefined,
-      photoURL: String(body.photoURL ?? "").trim() || undefined,
-      admissionDate: String(body.admissionDate ?? "").trim() || undefined,
-      lastLogin: new Date().toISOString(),
-    });
+    let student = null;
+    let generatedEnrollmentNo = "";
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      generatedEnrollmentNo = await getNextEnrollmentNo(db);
+      try {
+        student = await createStudent(db, {
+          enrollmentNo: generatedEnrollmentNo,
+          email,
+          firstName,
+          lastName,
+          password,
+          phone: String(body.phone ?? "").trim(),
+          department: String(body.department ?? "General").trim(),
+          semester,
+          year: toNumber(body.year, toYearFromSemester(semester)),
+          cgpa: toNumber(body.cgpa, 0),
+          rollNo: String(body.rollNo ?? generatedEnrollmentNo.slice(-3)).trim(),
+          program: String(body.program ?? "").trim() || undefined,
+          dateOfBirth: String(body.dateOfBirth ?? "").trim() || undefined,
+          address: String(body.address ?? "").trim() || undefined,
+          guardianName: String(body.guardianName ?? "").trim() || undefined,
+          guardianPhone: String(body.guardianPhone ?? "").trim() || undefined,
+          photoURL: String(body.photoURL ?? "").trim() || undefined,
+          admissionDate: String(body.admissionDate ?? "").trim() || undefined,
+          lastLogin: new Date().toISOString(),
+        });
+        break;
+      } catch (error: unknown) {
+        const maybeMongo = error as { code?: number };
+        if (maybeMongo?.code === 11000 && attempt < 2) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    if (!student) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Failed to auto-generate enrollment number. Please retry.",
+        },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
         success: true,
         data: serializeStudent(student),
-        message: "Student created successfully",
+        message: `Student created successfully with Enrollment No ${generatedEnrollmentNo}`,
       },
       { status: 201 }
     );

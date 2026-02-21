@@ -3,6 +3,7 @@ import localFont from "next/font/local";  // ← Add this import
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
+import { BRAND } from "@/lib/brand";
 
 const googleSans = localFont({
   src: [
@@ -64,9 +65,8 @@ const googleSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "College ERP Portal - Student Dashboard",
-  description:
-    "Modern College ERP Student Portal for managing academics, attendance, fees, and more",
+  title: `${BRAND.name} - Student Dashboard`,
+  description: BRAND.description,
   manifest: "/manifest.json",
 };
 

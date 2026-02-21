@@ -1,41 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { mockFees } from "@/lib/mockData";
 import { getAuthToken } from "@/lib/auth";
-import { AlertTriangle, CheckCircle2, CreditCard, Download, Landmark, ShieldCheck, Smartphone } from "lucide-react";
-import { toast } from "sonner";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertTriangle,
+  CalendarClock,
+  CheckCircle2,
+  CreditCard,
+  Download,
+  Landmark,
+  ReceiptText,
+  ShieldCheck,
+  Smartphone,
+  Wallet,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type FeeStatus = "Paid" | "Pending" | "Overdue";
 type PaymentMethod = "UPI" | "Card" | "Netbanking";
@@ -53,6 +41,31 @@ interface FeeRecord {
   semester?: number;
 }
 
+const inrFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
+const formatCurrency = (amount: number): string => inrFormatter.format(amount);
+
+const formatDate = (date?: string): string => {
+  if (!date) return "Not available";
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return date;
+  return parsedDate.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const statusBadgeVariant = (status: FeeStatus): "secondary" | "outline" | "destructive" => {
+  if (status === "Paid") return "secondary";
+  if (status === "Overdue") return "destructive";
+  return "outline";
+};
+
 export default function FeesPage() {
   const [fees, setFees] = useState<FeeRecord[]>(mockFees as FeeRecord[]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,12 +79,12 @@ export default function FeesPage() {
     method: string;
   } | null>(null);
 
-  const getAuthHeaders = (): HeadersInit => {
+  const getAuthHeaders = useCallback((): HeadersInit => {
     const token = getAuthToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+  }, []);
 
-  const fetchFees = async () => {
+  const fetchFees = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/fees", {
@@ -91,31 +104,23 @@ export default function FeesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getAuthHeaders]);
 
   useEffect(() => {
-    fetchFees();
-  }, []);
+    void fetchFees();
+  }, [fetchFees]);
 
-  const feeStructure = useMemo(
-    () =>
-      fees.map((fee) => ({
-        ...fee,
-        paid: fee.status === "Paid",
-      })),
-    [fees]
-  );
-
-  const totalFees = useMemo(() => feeStructure.reduce((sum, f) => sum + f.amount, 0), [feeStructure]);
-  const paidAmount = useMemo(
-    () => feeStructure.filter((f) => f.paid).reduce((sum, f) => sum + f.amount, 0),
-    [feeStructure]
-  );
+  const totalFees = useMemo(() => fees.reduce((sum, fee) => sum + fee.amount, 0), [fees]);
+  const paidFees = useMemo(() => fees.filter((fee) => fee.status === "Paid"), [fees]);
+  const paidAmount = useMemo(() => paidFees.reduce((sum, fee) => sum + fee.amount, 0), [paidFees]);
   const pendingFees = useMemo(
     () => fees.filter((fee) => fee.status === "Pending" || fee.status === "Overdue"),
     [fees]
   );
+  const overdueCount = useMemo(() => fees.filter((fee) => fee.status === "Overdue").length, [fees]);
   const pendingAmount = totalFees - paidAmount;
+  const completionRate = totalFees > 0 ? Math.round((paidAmount / totalFees) * 100) : 0;
+  const latestSemester = useMemo(() => Math.max(...fees.map((fee) => fee.semester ?? 0), 0), [fees]);
 
   const handlePayNow = async () => {
     if (pendingFees.length === 0) {
@@ -147,7 +152,7 @@ export default function FeesPage() {
         return;
       }
 
-      setFees((payload.data?.fees || fees) as FeeRecord[]);
+      setFees((current) => ((payload.data?.fees as FeeRecord[] | undefined) ?? current));
       setLastTransaction(payload.data?.transaction || null);
       setIsCheckoutOpen(false);
       toast.success(`Payment successful via Razorpay Demo: ${payload.data?.transaction?.paymentId || ""}`);
@@ -160,133 +165,182 @@ export default function FeesPage() {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Loading fees...</div>;
+    return <div className="flex items-center justify-center p-8">Loading fee ledger...</div>;
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold">Fees & Payments</h1>
-        <p className="text-muted-foreground">
-          View fee structure, dues, and payment history
-        </p>
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Student Fee Ledger</h1>
+          <p className="text-sm text-muted-foreground md:text-base">
+            Track your dues, payments, receipts, and checkout status in one place.
+          </p>
+        </div>
+        {pendingAmount > 0 && (
+          <Button onClick={() => setIsCheckoutOpen(true)} className="gap-2 w-full md:w-auto">
+            <CreditCard className="h-4 w-4" />
+            Pay {formatCurrency(pendingAmount)}
+          </Button>
+        )}
       </div>
 
-      {/* Outstanding Dues Alert */}
       {pendingAmount > 0 && (
-        <Alert className="border-accent/50 bg-accent/10">
-          <AlertTriangle className="h-4 w-4 text-accent" />
-          <AlertDescription>
-            You have outstanding dues of ₹{pendingAmount}. Please complete payment by the due date to avoid penalties.
+        <Alert className="border-amber-400/40 bg-amber-500/10">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-sm">
+            Outstanding dues: <span className="font-semibold">{formatCurrency(pendingAmount)}</span>. Please clear pending items to avoid late penalties.
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Fee Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Total Fees</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-foreground">₹{totalFees}</div>
-            <p className="text-xs text-muted-foreground mt-1">Current term total</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Paid Amount</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">₹{paidAmount}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {((paidAmount / totalFees) * 100).toFixed(0)}% completed
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Pending Dues</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-3xl font-bold ${
-                pendingAmount > 0 ? "text-red-600" : "text-green-600"
-              }`}
-            >
-              ₹{pendingAmount}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {pendingFees.length} item(s)
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Fee Structure */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Fee Breakdown</CardTitle>
-          <CardDescription>Semester 3 fee structure</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {feeStructure.map((fee, idx) => (
-              <div key={idx} className="flex items-center justify-between pb-3 border-b border-border last:border-0">
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`h-3 w-3 rounded-full ${
-                      fee.paid ? "bg-green-600" : "bg-gray-400"
-                    }`}
-                  />
-                  <span className="text-sm font-medium">{fee.category}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm">₹{fee.amount}</span>
-                  <Badge
-                    variant={fee.status === "Paid" ? "secondary" : fee.status === "Overdue" ? "destructive" : "outline"}
-                  >
-                    {fee.status}
-                  </Badge>
+      <Card className="border-primary/20 overflow-hidden">
+        <CardContent className="p-0">
+          <div className="bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-5 md:p-6">
+            <div className="grid gap-5 md:grid-cols-[1.1fr_1fr] md:items-end">
+              <div className="space-y-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {latestSemester > 0 ? `Semester ${latestSemester}` : "Current Session"} payment overview
+                </p>
+                <h2 className="text-xl font-semibold md:text-2xl">{formatCurrency(totalFees)} billed</h2>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Completion</span>
+                    <span className="font-medium">{completionRate}%</span>
+                  </div>
+                  <Progress value={completionRate} className="h-2.5" />
                 </div>
               </div>
-            ))}
-            <div className="pt-3 border-t border-border flex items-center justify-between">
-              <span className="font-bold">Total</span>
-              <span className="font-bold">₹{totalFees}</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border bg-background/90 p-3">
+                  <p className="text-xs text-muted-foreground">Paid</p>
+                  <p className="mt-1 text-base font-semibold text-green-600">{formatCurrency(paidAmount)}</p>
+                </div>
+                <div className="rounded-xl border bg-background/90 p-3">
+                  <p className="text-xs text-muted-foreground">Due</p>
+                  <p className={`mt-1 text-base font-semibold ${pendingAmount > 0 ? "text-red-600" : "text-green-600"}`}>
+                    {formatCurrency(pendingAmount)}
+                  </p>
+                </div>
+                <div className="rounded-xl border bg-background/90 p-3">
+                  <p className="text-xs text-muted-foreground">Pending Items</p>
+                  <p className="mt-1 text-base font-semibold">{pendingFees.length}</p>
+                </div>
+                <div className="rounded-xl border bg-background/90 p-3">
+                  <p className="text-xs text-muted-foreground">Overdue</p>
+                  <p className={`mt-1 text-base font-semibold ${overdueCount > 0 ? "text-red-600" : "text-green-600"}`}>
+                    {overdueCount}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Payment Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Fee Items</CardTitle>
+          <CardDescription>Complete ledger entries with due dates and status tags</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3 md:hidden">
+            {fees.map((fee) => (
+              <div key={fee.feeId || fee.id || fee.description} className="rounded-lg border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium leading-tight">{fee.description}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {fee.category || "General Fee"}
+                      {fee.semester ? ` • Sem ${fee.semester}` : ""}
+                    </p>
+                  </div>
+                  <p className="text-sm font-semibold">{formatCurrency(fee.amount)}</p>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-xs">
+                  <p className="text-muted-foreground">Due {formatDate(fee.dueDate)}</p>
+                  <Badge variant={statusBadgeVariant(fee.status)}>{fee.status}</Badge>
+                </div>
+                {fee.status === "Paid" && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Paid on {formatDate(fee.paidDate)} via {fee.modeOfPayment || "Online"}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fee Head</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Payment Detail</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {fees.map((fee) => (
+                  <TableRow key={fee.feeId || fee.id || fee.description}>
+                    <TableCell>
+                      <p className="font-medium">{fee.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {fee.category || "General Fee"}
+                        {fee.semester ? ` • Semester ${fee.semester}` : ""}
+                      </p>
+                    </TableCell>
+                    <TableCell>{formatDate(fee.dueDate)}</TableCell>
+                    <TableCell className="font-medium">{formatCurrency(fee.amount)}</TableCell>
+                    <TableCell>
+                      <Badge variant={statusBadgeVariant(fee.status)}>{fee.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {fee.status === "Paid"
+                        ? `${fee.modeOfPayment || "Online"} • ${formatDate(fee.paidDate)}`
+                        : "Not paid yet"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
       {pendingAmount > 0 && (
-        <Card className="border-accent/30 bg-accent/5">
+        <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
-            <CardTitle className="text-base">Outstanding Payment</CardTitle>
-            <CardDescription>
-              Amount due: ₹{pendingAmount}
-            </CardDescription>
+            <CardTitle className="text-base">Payment Options</CardTitle>
+            <CardDescription>Choose a payment mode to clear outstanding dues</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                You can pay your fees through:
-              </p>
-              <ul className="text-sm space-y-1 ml-4 list-disc text-muted-foreground">
-                <li>Online Payment (Razorpay Demo checkout)</li>
-                <li>Bank Transfer</li>
-                <li>Cash Payment at College Counter</li>
-              </ul>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <div className="rounded-lg border bg-background/90 p-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <CreditCard className="h-4 w-4 text-primary" />
+                  Razorpay Demo
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">Instant demo checkout for testing flow.</p>
+              </div>
+              <div className="rounded-lg border bg-background/90 p-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Landmark className="h-4 w-4 text-primary" />
+                  Bank Transfer
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">Mark payment after manual verification.</p>
+              </div>
+              <div className="rounded-lg border bg-background/90 p-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Wallet className="h-4 w-4 text-primary" />
+                  Campus Counter
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">Offline cash/card at finance office.</p>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setIsCheckoutOpen(true)}
-                disabled={isProcessing}
-                className="gap-2 flex-1"
-              >
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button onClick={() => setIsCheckoutOpen(true)} disabled={isProcessing} className="gap-2 flex-1">
                 <CreditCard className="h-4 w-4" />
                 Pay with Razorpay Demo
               </Button>
@@ -298,80 +352,119 @@ export default function FeesPage() {
         </Card>
       )}
 
-      {/* Payment History */}
       <Card>
         <CardHeader>
           <CardTitle>Payment History</CardTitle>
-          <CardDescription>Previous payments and receipts</CardDescription>
+          <CardDescription>Receipts and settled records</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Mode</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Receipt</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fees
-                  .filter((f) => f.status === "Paid")
-                  .map((fee) => (
-                    <TableRow key={fee.feeId || fee.id}>
-                      <TableCell className="text-sm">{fee.paidDate}</TableCell>
-                      <TableCell className="text-sm">{fee.description}</TableCell>
-                      <TableCell className="font-medium">₹{fee.amount}</TableCell>
-                      <TableCell className="text-sm">{fee.modeOfPayment}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">Paid</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-primary hover:text-primary"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+          {paidFees.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-6 text-center">
+              <ReceiptText className="mx-auto h-5 w-5 text-muted-foreground" />
+              <p className="mt-2 text-sm font-medium">No payments recorded yet</p>
+              <p className="text-xs text-muted-foreground">Paid fee entries will appear here.</p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3 md:hidden">
+                {paidFees.map((fee) => (
+                  <div key={fee.feeId || fee.id || fee.description} className="rounded-lg border p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-medium leading-tight">{fee.description}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{formatDate(fee.paidDate)}</p>
+                      </div>
+                      <Badge variant="secondary">Paid</Badge>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-sm font-semibold">{formatCurrency(fee.amount)}</p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 gap-1 text-primary"
+                        onClick={() => toast.success("Receipt download demo only")}
+                      >
+                        <Download className="h-4 w-4" />
+                        Receipt
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Paid On</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Method</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead className="text-right">Receipt</TableHead>
                     </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {paidFees.map((fee) => (
+                      <TableRow key={fee.feeId || fee.id || fee.description}>
+                        <TableCell className="text-sm">{formatDate(fee.paidDate)}</TableCell>
+                        <TableCell className="text-sm">{fee.description}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{fee.modeOfPayment || "Online"}</TableCell>
+                        <TableCell className="font-medium">{formatCurrency(fee.amount)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-primary hover:text-primary"
+                            onClick={() => toast.success("Receipt download demo only")}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
       {lastTransaction && (
         <Alert className="border-green-400/40 bg-green-500/10">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription>
-            Payment complete. Transaction `{lastTransaction.paymentId}` | Receipt `{lastTransaction.receiptNo}` | Amount ₹
-            {lastTransaction.amount}
+          <AlertDescription className="text-sm">
+            Payment complete: <span className="font-semibold">{lastTransaction.paymentId}</span> • Receipt{" "}
+            <span className="font-semibold">{lastTransaction.receiptNo}</span> • {formatCurrency(lastTransaction.amount)} via{" "}
+            <span className="font-semibold">{lastTransaction.method}</span>
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Important Notes */}
-      <Card className="bg-muted/50">
+      <Card className="bg-muted/40">
         <CardHeader>
           <CardTitle className="text-sm">Important Information</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ul className="text-sm space-y-2 text-muted-foreground">
-            <li>• Late payment may attract a fine of 1% per week</li>
-            <li>• Keep proof of payment for records</li>
-            <li>• For payment issues, contact the Finance Office</li>
-            <li>• Receipts are automatically generated and sent to your email</li>
-          </ul>
+        <CardContent className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+          <div className="flex items-start gap-2">
+            <CalendarClock className="h-4 w-4 mt-0.5 text-primary" />
+            <p>Late payment can attract a fine of 1% per week.</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <ShieldCheck className="h-4 w-4 mt-0.5 text-primary" />
+            <p>Keep your receipts and transaction IDs for verification.</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 mt-0.5 text-primary" />
+            <p>Contact Finance Office for failed or duplicate transactions.</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <ReceiptText className="h-4 w-4 mt-0.5 text-primary" />
+            <p>Payment acknowledgments are generated automatically.</p>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Added section to use the imported Accordion components */}
       <Card className="bg-muted/30">
         <CardHeader>
           <CardTitle className="text-sm">Fee Payment Terms & Conditions</CardTitle>
@@ -380,12 +473,12 @@ export default function FeesPage() {
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="terms">
               <AccordionTrigger>Read full terms</AccordionTrigger>
-              <AccordionContent className="text-sm text-muted-foreground space-y-3">
+              <AccordionContent className="space-y-2 text-sm text-muted-foreground">
                 <p>1. All fees must be paid by the due date mentioned in the fee notice.</p>
-                <p>2. Late payments will incur a penalty of 1% per week on the outstanding amount.</p>
+                <p>2. Late payments may incur a penalty of 1% per week on the outstanding amount.</p>
                 <p>3. This portal includes a Razorpay-like demo gateway for non-production testing.</p>
-                <p>4. Refunds are only processed in case of official withdrawal as per college policy.</p>
-                <p>5. Keep digital/physical receipts for future reference.</p>
+                <p>4. Refunds are processed only in official withdrawal cases as per policy.</p>
+                <p>5. Keep digital or printed receipts for audit and reference.</p>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -396,28 +489,26 @@ export default function FeesPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Razorpay Demo Checkout</DialogTitle>
-            <DialogDescription>
-              Secure demo checkout flow for ERP fee payments
-            </DialogDescription>
+            <DialogDescription>Secure demo checkout flow for ERP fee payments.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <Card className="bg-muted/30">
               <CardContent className="pt-4 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Items</span>
+                  <span className="text-muted-foreground">Payable items</span>
                   <span>{pendingFees.length}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Amount</span>
-                  <span className="font-semibold">₹{pendingAmount}</span>
+                  <span className="text-muted-foreground">Total amount</span>
+                  <span className="font-semibold">{formatCurrency(pendingAmount)}</span>
                 </div>
               </CardContent>
             </Card>
 
             <div className="space-y-2">
               <p className="text-sm font-medium">Choose payment method</p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <Button
                   type="button"
                   variant={paymentMethod === "UPI" ? "default" : "outline"}
@@ -459,7 +550,7 @@ export default function FeesPage() {
               </Button>
               <Button onClick={handlePayNow} className="flex-1 gap-2" disabled={isProcessing}>
                 <CreditCard className="h-4 w-4" />
-                {isProcessing ? "Processing..." : `Pay ₹${pendingAmount}`}
+                {isProcessing ? "Processing..." : `Pay ${formatCurrency(pendingAmount)}`}
               </Button>
             </div>
           </div>

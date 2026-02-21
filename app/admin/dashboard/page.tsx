@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,16 +19,12 @@ export default function AdminDashboard() {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const getAuthHeaders = (): HeadersInit => {
+  const getAuthHeaders = useCallback((): HeadersInit => {
     const token = getAuthToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+  }, []);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const [studentsRes, facultyRes, feesRes] = await Promise.all([
         fetch("/api/admin/students", { headers: getAuthHeaders() }),
@@ -55,7 +51,11 @@ export default function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getAuthHeaders]);
+
+  useEffect(() => {
+    void fetchStats();
+  }, [fetchStats]);
 
   return (
     <div className="space-y-6 animate-fade-in">

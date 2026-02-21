@@ -19,6 +19,7 @@ import { logout, getStudentData } from "@/lib/auth";
 import { mockNotices } from "@/lib/mockData";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { BRAND } from "@/lib/brand";
 
 export function Navbar() {
   const router = useRouter();
@@ -50,25 +51,31 @@ export function Navbar() {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-card border-b border-border">
-      <div className="flex items-center justify-between px-4 py-3">
-        {/* Left - Semester Display */}
-        <div className="hidden md:flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Semester:</span>
-          <Badge variant="secondary">
-            {studentData?.semester || 3} - {studentData?.year || 2} Year
-          </Badge>
+    <header className="sticky top-0 z-30 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 pl-16 md:pl-4">
+        {/* Left - App Info / Semester */}
+        <div className="min-w-0">
+          <div className="md:hidden">
+            <p className="truncate text-sm font-semibold text-foreground">{BRAND.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{studentName}</p>
+          </div>
+          <div className="hidden md:flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Semester:</span>
+            <Badge variant="secondary">
+              {studentData?.semester || 3} - {studentData?.year || 2} Year
+            </Badge>
+          </div>
         </div>
 
         {/* Center - College Name/Logo */}
         <div className="hidden lg:block text-center">
           <h1 className="text-sm font-semibold text-foreground">
-            College ERP Portal
+            {BRAND.fullName}
           </h1>
         </div>
 
         {/* Right - Actions */}
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="ml-auto flex items-center gap-1.5 md:gap-2">
           {/* Theme Toggle */}
           <Button
             variant="ghost"

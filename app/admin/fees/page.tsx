@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,24 +36,26 @@ interface FeeSummary {
   overdueCount: number;
 }
 
+const defaultSummary: FeeSummary = {
+  totalRecords: 0,
+  totalCollected: 0,
+  totalPending: 0,
+  overdueCount: 0,
+};
+
 export default function AdminFeesPage() {
   const [fees, setFees] = useState<FeeRecord[]>([]);
-  const [summary, setSummary] = useState<FeeSummary>({
-    totalRecords: 0,
-    totalCollected: 0,
-    totalPending: 0,
-    overdueCount: 0,
-  });
+  const [summary, setSummary] = useState<FeeSummary>(defaultSummary);
   const [statusFilter, setStatusFilter] = useState<"all" | FeeStatus>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const getAuthHeaders = (): HeadersInit => {
+  const getAuthHeaders = useCallback((): HeadersInit => {
     const token = getAuthToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+  }, []);
 
-  const fetchFees = async (nextFilter: "all" | FeeStatus) => {
+  const fetchFees = useCallback(async (nextFilter: "all" | FeeStatus) => {
     setIsLoading(true);
     try {
       const query = nextFilter === "all" ? "" : `?status=${nextFilter}`;
@@ -68,18 +70,18 @@ export default function AdminFeesPage() {
       }
 
       setFees(payload.data || []);
-      setSummary(payload.summary || summary);
+      setSummary(payload.summary || defaultSummary);
     } catch (error) {
       console.error("[v0] Failed to fetch fee records:", error);
       toast.error("Failed to fetch fee records");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getAuthHeaders]);
 
   useEffect(() => {
-    fetchFees(statusFilter);
-  }, []);
+    void fetchFees(statusFilter);
+  }, [fetchFees, statusFilter]);
 
   const updateFeeStatus = async (feeId: string, status: FeeStatus) => {
     setIsSaving(true);

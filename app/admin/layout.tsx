@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { getUserRole, isAuthenticated } from "@/lib/auth";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { AdminNavbar } from "@/components/admin-navbar";
+import { ChatbotWidget } from "@/components/chatbot-widget";
+import { AdminMobileBottomNav } from "@/components/admin-mobile-bottom-nav";
 
 export default function AdminLayout({
   children,
@@ -41,12 +43,14 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-dvh bg-background overflow-x-hidden">
       <AdminSidebar />
-      <main className="flex-1 md:ml-64">
+      <main className="flex-1 md:ml-64 min-w-0">
         <AdminNavbar />
-        <div className="p-4 md:p-6">{children}</div>
+        <div className="p-4 pb-24 md:p-6 md:pb-6">{children}</div>
       </main>
+      <AdminMobileBottomNav />
+      <ChatbotWidget />
     </div>
   );
 }

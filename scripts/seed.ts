@@ -20,10 +20,56 @@ async function ensureIndexes() {
     db.collection("fees").createIndex({ feeId: 1 }, { unique: true }),
     db.collection("fees").createIndex({ enrollmentNo: 1 }),
     db.collection("fees").createIndex({ status: 1 }),
+    db.collection("timetable").createIndex({ entryId: 1 }, { unique: true }),
+    db.collection("timetable").createIndex({ role: 1, uniqueId: 1, dayOfWeek: 1 }),
+    db.collection("attendance_logs").createIndex({ logId: 1 }, { unique: true }),
+    db.collection("attendance_logs").createIndex({ facultyId: 1, date: 1 }),
+    db.collection("student_attendance").createIndex({ entryId: 1 }, { unique: true }),
+    db.collection("student_attendance").createIndex({ enrollmentNo: 1, date: 1 }),
+    db.collection("reminders").createIndex({ reminderId: 1 }, { unique: true }),
+    db.collection("reminders").createIndex({ role: 1, uniqueId: 1, status: 1, remindAt: 1 }),
   ]);
 }
 
-const isoDate = (date: Date): string => date.toISOString().split("T")[0];
+const isoDate = (date: Date): string => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+interface TimetableSeed {
+  entryId: string;
+  role: "student" | "faculty" | "admin";
+  uniqueId: string;
+  dayOfWeek: number;
+  subject: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+}
+
+interface AttendanceLogSeed {
+  logId: string;
+  date: string;
+  facultyId: string;
+  subject: string;
+  semester: number;
+  department: string;
+  totalStudents: number;
+  presentStudents: number;
+  status: "taken" | "pending";
+}
+
+interface StudentAttendanceSeed {
+  entryId: string;
+  date: string;
+  enrollmentNo: string;
+  subject: string;
+  status: "P" | "A" | "L";
+  markedByFacultyId: string;
+  markedAt: string;
+}
 
 const buildFeesForStudent = (enrollmentNo: string, semester: number) => {
   const now = new Date();
@@ -98,6 +144,243 @@ const buildFeesForStudent = (enrollmentNo: string, semester: number) => {
   ];
 };
 
+const buildStudentTimetable = (enrollmentNo: string, department: string): TimetableSeed[] => [
+  {
+    entryId: `${enrollmentNo}-TT-1`,
+    role: "student",
+    uniqueId: enrollmentNo,
+    dayOfWeek: 1,
+    subject: `${department} Core Theory`,
+    startTime: "09:00",
+    endTime: "10:00",
+    room: "A101",
+  },
+  {
+    entryId: `${enrollmentNo}-TT-2`,
+    role: "student",
+    uniqueId: enrollmentNo,
+    dayOfWeek: 1,
+    subject: "Mathematics",
+    startTime: "11:00",
+    endTime: "12:00",
+    room: "A204",
+  },
+  {
+    entryId: `${enrollmentNo}-TT-3`,
+    role: "student",
+    uniqueId: enrollmentNo,
+    dayOfWeek: 2,
+    subject: "Communication Skills",
+    startTime: "10:00",
+    endTime: "11:00",
+    room: "B108",
+  },
+  {
+    entryId: `${enrollmentNo}-TT-4`,
+    role: "student",
+    uniqueId: enrollmentNo,
+    dayOfWeek: 3,
+    subject: `${department} Lab`,
+    startTime: "14:00",
+    endTime: "16:00",
+    room: "Lab-3",
+  },
+  {
+    entryId: `${enrollmentNo}-TT-5`,
+    role: "student",
+    uniqueId: enrollmentNo,
+    dayOfWeek: 4,
+    subject: "Project / Tutorial",
+    startTime: "09:30",
+    endTime: "10:30",
+    room: "T201",
+  },
+  {
+    entryId: `${enrollmentNo}-TT-6`,
+    role: "student",
+    uniqueId: enrollmentNo,
+    dayOfWeek: 5,
+    subject: "Elective",
+    startTime: "12:00",
+    endTime: "13:00",
+    room: "E104",
+  },
+];
+
+const buildFacultyTimetable = (employeeId: string, specialization: string): TimetableSeed[] => [
+  {
+    entryId: `${employeeId}-TT-1`,
+    role: "faculty",
+    uniqueId: employeeId,
+    dayOfWeek: 1,
+    subject: `${specialization} Lecture`,
+    startTime: "09:00",
+    endTime: "10:00",
+    room: "F101",
+  },
+  {
+    entryId: `${employeeId}-TT-2`,
+    role: "faculty",
+    uniqueId: employeeId,
+    dayOfWeek: 1,
+    subject: "Mentoring Session",
+    startTime: "13:00",
+    endTime: "14:00",
+    room: "Mentor-2",
+  },
+  {
+    entryId: `${employeeId}-TT-3`,
+    role: "faculty",
+    uniqueId: employeeId,
+    dayOfWeek: 2,
+    subject: `${specialization} Tutorial`,
+    startTime: "11:00",
+    endTime: "12:00",
+    room: "F201",
+  },
+  {
+    entryId: `${employeeId}-TT-4`,
+    role: "faculty",
+    uniqueId: employeeId,
+    dayOfWeek: 3,
+    subject: "Office Hours",
+    startTime: "15:00",
+    endTime: "16:00",
+    room: "Cabin-12",
+  },
+  {
+    entryId: `${employeeId}-TT-5`,
+    role: "faculty",
+    uniqueId: employeeId,
+    dayOfWeek: 4,
+    subject: "Assessment Review",
+    startTime: "10:00",
+    endTime: "11:00",
+    room: "F104",
+  },
+];
+
+const buildAdminTimetable = (): TimetableSeed[] => [
+  {
+    entryId: "ADMIN001-TT-1",
+    role: "admin",
+    uniqueId: "ADMIN001",
+    dayOfWeek: 1,
+    subject: "Weekly Ops Review",
+    startTime: "09:30",
+    endTime: "10:30",
+    room: "Board Room",
+  },
+  {
+    entryId: "ADMIN001-TT-2",
+    role: "admin",
+    uniqueId: "ADMIN001",
+    dayOfWeek: 2,
+    subject: "Admissions & Records",
+    startTime: "11:00",
+    endTime: "12:00",
+    room: "Admin Office",
+  },
+  {
+    entryId: "ADMIN001-TT-3",
+    role: "admin",
+    uniqueId: "ADMIN001",
+    dayOfWeek: 4,
+    subject: "Finance Reconciliation",
+    startTime: "15:00",
+    endTime: "16:00",
+    room: "Finance Desk",
+  },
+];
+
+const buildAttendanceLogs = (): AttendanceLogSeed[] => {
+  const today = isoDate(new Date());
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterday = isoDate(yesterdayDate);
+
+  return [
+    {
+      logId: `ATT-FAC001-${today}-1`,
+      date: today,
+      facultyId: "FAC001",
+      subject: "Data Structures",
+      semester: 4,
+      department: "Computer Science",
+      totalStudents: 45,
+      presentStudents: 39,
+      status: "taken",
+    },
+    {
+      logId: `ATT-FAC002-${today}-1`,
+      date: today,
+      facultyId: "FAC002",
+      subject: "Signal Processing",
+      semester: 3,
+      department: "Electronics",
+      totalStudents: 38,
+      presentStudents: 31,
+      status: "taken",
+    },
+    {
+      logId: `ATT-FAC003-${today}-1`,
+      date: today,
+      facultyId: "FAC003",
+      subject: "Linear Algebra",
+      semester: 4,
+      department: "Mathematics",
+      totalStudents: 34,
+      presentStudents: 0,
+      status: "pending",
+    },
+    {
+      logId: `ATT-FAC001-${yesterday}-1`,
+      date: yesterday,
+      facultyId: "FAC001",
+      subject: "Data Structures",
+      semester: 4,
+      department: "Computer Science",
+      totalStudents: 45,
+      presentStudents: 40,
+      status: "taken",
+    },
+  ];
+};
+
+const buildStudentAttendance = (enrollmentNo: string, index: number): StudentAttendanceSeed[] => {
+  const today = isoDate(new Date());
+  const statuses: Array<"P" | "A" | "L"> = ["P", "P", "A", "P", "L"];
+  return [
+    {
+      entryId: `${enrollmentNo}-ATT-1-${today}`,
+      date: today,
+      enrollmentNo,
+      subject: "Core Theory",
+      status: statuses[index % statuses.length],
+      markedByFacultyId: "FAC001",
+      markedAt: new Date().toISOString(),
+    },
+    {
+      entryId: `${enrollmentNo}-ATT-2-${today}`,
+      date: today,
+      enrollmentNo,
+      subject: "Mathematics",
+      status: statuses[(index + 1) % statuses.length],
+      markedByFacultyId: "FAC003",
+      markedAt: new Date().toISOString(),
+    },
+    {
+      entryId: `${enrollmentNo}-ATT-3-${today}`,
+      date: today,
+      enrollmentNo,
+      subject: "Communication Skills",
+      status: statuses[(index + 2) % statuses.length],
+      markedByFacultyId: "FAC002",
+      markedAt: new Date().toISOString(),
+    },
+  ];
+};
+
 async function seed() {
   try {
     console.log("[v0] Starting database seeding...");
@@ -108,6 +391,10 @@ async function seed() {
     await db.collection("faculty").deleteMany({});
     await db.collection("admins").deleteMany({});
     await db.collection("fees").deleteMany({});
+    await db.collection("timetable").deleteMany({});
+    await db.collection("attendance_logs").deleteMany({});
+    await db.collection("student_attendance").deleteMany({});
+    await db.collection("reminders").deleteMany({});
     console.log("[v0] Cleared existing data");
 
     await ensureIndexes();
@@ -166,6 +453,11 @@ async function seed() {
     for (const faculty of testFaculty) {
       await createFaculty(db, faculty);
       console.log(`[v0] Created faculty: ${faculty.employeeId}`);
+
+      const facultyTimetable = buildFacultyTimetable(faculty.employeeId, faculty.specialization);
+      if (facultyTimetable.length > 0) {
+        await db.collection<TimetableSeed>("timetable").insertMany(facultyTimetable);
+      }
     }
 
     // Test students data
@@ -277,7 +569,7 @@ async function seed() {
       },
     ];
 
-    for (const student of testStudents) {
+    for (const [index, student] of testStudents.entries()) {
       await createStudent(db, student);
       console.log(`[v0] Created student: ${student.enrollmentNo}`);
 
@@ -286,6 +578,26 @@ async function seed() {
         await createFeeRecord(db, fee);
       }
       console.log(`[v0] Created fees for: ${student.enrollmentNo}`);
+
+      const studentTimetable = buildStudentTimetable(student.enrollmentNo, student.department);
+      if (studentTimetable.length > 0) {
+        await db.collection<TimetableSeed>("timetable").insertMany(studentTimetable);
+      }
+
+      const studentAttendance = buildStudentAttendance(student.enrollmentNo, index);
+      if (studentAttendance.length > 0) {
+        await db.collection<StudentAttendanceSeed>("student_attendance").insertMany(studentAttendance);
+      }
+    }
+
+    const adminTimetable = buildAdminTimetable();
+    if (adminTimetable.length > 0) {
+      await db.collection<TimetableSeed>("timetable").insertMany(adminTimetable);
+    }
+
+    const attendanceLogs = buildAttendanceLogs();
+    if (attendanceLogs.length > 0) {
+      await db.collection<AttendanceLogSeed>("attendance_logs").insertMany(attendanceLogs);
     }
 
     console.log("\n[v0] Seeding completed successfully!");

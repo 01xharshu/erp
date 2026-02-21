@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { logout } from "@/lib/auth";
 import { toast } from "sonner";
+import { BRAND } from "@/lib/brand";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
@@ -29,12 +30,12 @@ export function AdminSidebar() {
 
   return (
     <>
-      <div className="md:hidden fixed top-4 left-4 z-40">
+      <div className="md:hidden fixed top-[max(0.75rem,env(safe-area-inset-top))] left-4 z-40">
         <Button
           variant="outline"
           size="icon"
           onClick={() => setIsOpen((prev) => !prev)}
-          className="bg-card"
+          className="h-10 w-10 rounded-full bg-background/90 backdrop-blur"
         >
           {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
@@ -56,8 +57,8 @@ export function AdminSidebar() {
       >
         <div className="flex flex-col h-full">
           <div className="p-6 border-b border-border">
-            <h1 className="text-xl font-bold text-primary">ERP Portal</h1>
-            <p className="text-xs text-muted-foreground mt-1">Admin Hub</p>
+            <h1 className="text-xl font-bold text-primary">{BRAND.name}</h1>
+            <p className="text-xs text-muted-foreground mt-1">Admin Workspace</p>
           </div>
 
           <nav className="flex-1 overflow-y-auto p-4 space-y-2">

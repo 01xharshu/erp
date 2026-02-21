@@ -281,7 +281,7 @@ export default function TimetablePage() {
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-1.5">
           <p>• Tap tabs to switch days</p>
-          <p>• Use "Tabular View" for full weekly grid (pinch to zoom, export PNG)</p>
+          <p>• Use &quot;Tabular View&quot; for full weekly grid (pinch to zoom, export PNG)</p>
           <p>• Timetable may change — check regularly</p>
         </CardContent>
       </Card>

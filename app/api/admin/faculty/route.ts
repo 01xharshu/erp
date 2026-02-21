@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/api-auth";
 import { createFaculty, deleteFaculty, findAnyUserByEmail, findFacultyByEmployeeId, getAllFaculty, updateFaculty, updateFacultyPassword } from "@/lib/db-models";
+import { getNextFacultyEmployeeId } from "@/lib/id-rules";
 import { getDatabase } from "@/lib/mongodb";
 
 const serializeFaculty = (faculty: Awaited<ReturnType<typeof findFacultyByEmployeeId>>): Record<string, unknown> | null => {
@@ -55,17 +56,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const employeeId = String(body.employeeId ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
     const firstName = String(body.firstName ?? "").trim();
     const lastName = String(body.lastName ?? "").trim();
     const password = String(body.password ?? "");
 
-    if (!employeeId || !email || !firstName || !lastName || !password) {
+    if (!email || !firstName || !lastName || !password) {
       return NextResponse.json(
         {
           success: false,
-          message: "Employee ID, email, name, and password are required",
+          message: "Email, name, and password are required",
         },
         { status: 400 }
       );
@@ -73,20 +73,7 @@ export async function POST(request: NextRequest) {
 
     const db = await getDatabase();
 
-    const [existingByEmployeeId, existingByEmail] = await Promise.all([
-      findFacultyByEmployeeId(db, employeeId),
-      findAnyUserByEmail(db, email),
-    ]);
-
-    if (existingByEmployeeId) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Employee ID already exists",
-        },
-        { status: 409 }
-      );
-    }
+    const existingByEmail = await findAnyUserByEmail(db, email);
 
     if (existingByEmail) {
       return NextResponse.json(
@@ -98,23 +85,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const created = await createFaculty(db, {
-      employeeId,
-      email,
-      firstName,
-      lastName,
-      password,
-      phone: String(body.phone ?? "").trim(),
-      department: String(body.department ?? "General").trim(),
-      designation: String(body.designation ?? "Lecturer").trim(),
-      specialization: String(body.specialization ?? "General").trim(),
-    });
+    let created = null;
+    let generatedEmployeeId = "";
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      generatedEmployeeId = await getNextFacultyEmployeeId(db);
+      try {
+        created = await createFaculty(db, {
+          employeeId: generatedEmployeeId,
+          email,
+          firstName,
+          lastName,
+          password,
+          phone: String(body.phone ?? "").trim(),
+          department: String(body.department ?? "General").trim(),
+          designation: String(body.designation ?? "Lecturer").trim(),
+          specialization: String(body.specialization ?? "General").trim(),
+        });
+        break;
+      } catch (error: unknown) {
+        const maybeMongo = error as { code?: number };
+        if (maybeMongo?.code === 11000 && attempt < 2) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    if (!created) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Failed to auto-generate employee ID. Please retry.",
+        },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
         success: true,
         data: serializeFaculty(created),
-        message: "Faculty created successfully",
+        message: `Faculty created successfully with Employee ID ${generatedEmployeeId}`,
       },
       { status: 201 }
     );

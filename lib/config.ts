@@ -1,7 +1,9 @@
+import { BRAND } from "@/lib/brand";
+
 export const config = {
   app: {
-    name: "College ERP Portal",
-    description: "Modern College ERP Student Portal",
+    name: BRAND.fullName,
+    description: BRAND.description,
     version: "0.1.0",
     author: "Aarav Kumar",
     url: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",

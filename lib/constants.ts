@@ -1,7 +1,8 @@
 // Application constants
+import { BRAND } from "@/lib/brand";
 
-export const APP_NAME = "College ERP Portal";
-export const APP_DESCRIPTION = "Modern College ERP Student Portal for managing academics, attendance, fees, and more";
+export const APP_NAME = BRAND.fullName;
+export const APP_DESCRIPTION = BRAND.description;
 
 // Routes
 export const ROUTES = {
