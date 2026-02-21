@@ -1,5 +1,5 @@
-import { getDatabase } from "../lib/mongodb.ts";
-import { createStudent, createFaculty, createAdmin } from "../lib/db-models.ts";
+import { getDatabase } from "../lib/mongodb.js";
+import { createStudent, createFaculty, createAdmin } from "../lib/db-models.js";
 
 /**
  * Seed script to populate MongoDB with test data
