@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
+import { getAuthToken } from "@/lib/auth";
 
 interface Faculty {
   _id: string;
@@ -40,12 +41,21 @@ export default function FacultyManagement() {
     fetchFaculty();
   }, []);
 
+  const getAuthHeaders = (): HeadersInit => {
+    const token = getAuthToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const fetchFaculty = async () => {
     try {
-      const res = await fetch("/api/admin/faculty");
+      const res = await fetch("/api/admin/faculty", {
+        headers: getAuthHeaders(),
+      });
       const data = await res.json();
       if (data.success) {
         setFaculty(data.data);
+      } else {
+        toast.error(data.message || "Failed to fetch faculty");
       }
     } catch (error) {
       console.error("[v0] Error fetching faculty:", error);
@@ -67,7 +77,10 @@ export default function FacultyManagement() {
       const method = editingId ? "PUT" : "POST";
       const res = await fetch("/api/admin/faculty", {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(formData),
       });
 
@@ -92,6 +105,7 @@ export default function FacultyManagement() {
     try {
       const res = await fetch(`/api/admin/faculty?employeeId=${employeeId}`, {
         method: "DELETE",
+        headers: getAuthHeaders(),
       });
 
       const data = await res.json();

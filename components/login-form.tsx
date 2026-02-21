@@ -9,10 +9,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { setAuthSession } from "@/lib/auth";
 
 export function LoginForm() {
   const router = useRouter();
-  const [enrollmentNo, setEnrollmentNo] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -21,7 +22,7 @@ export function LoginForm() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!enrollmentNo || !password) {
+    if (!identifier || !password) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -35,7 +36,7 @@ export function LoginForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          enrollmentNo,
+          identifier,
           password,
         }),
       });
@@ -43,15 +44,18 @@ export function LoginForm() {
       const data = await response.json();
 
       if (data.success) {
-        // Store token in localStorage
-        localStorage.setItem("authToken", data.token);
-        localStorage.setItem("studentData", JSON.stringify(data.student));
+        if (!data.user || !data.token) {
+          toast.error("Invalid auth response from server");
+          return;
+        }
+
+        setAuthSession(data.token, data.user);
         
         toast.success("Login successful!");
         
         // Add delay for visual feedback
         await new Promise((resolve) => setTimeout(resolve, 500));
-        router.push("/dashboard");
+        router.push(data.user.role === "admin" ? "/admin/dashboard" : "/dashboard");
       } else {
         toast.error(data.message || "Invalid credentials");
       }
@@ -74,23 +78,23 @@ export function LoginForm() {
           </div>
           <CardTitle className="text-2xl text-center">College ERP Portal</CardTitle>
           <CardDescription className="text-center">
-            Student Portal Login
+            Login with Email or Unique ID
           </CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* Enrollment/Roll No Field */}
+            {/* Email / ID Field */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Enrollment / Roll No
+                Email or Unique ID
               </label>
               <Input
                 type="text"
-                placeholder="EN2024001"
-                value={enrollmentNo}
-                onChange={(e) => setEnrollmentNo(e.target.value)}
+                placeholder="EN2024001 or admin@college.edu"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 disabled={isLoading}
                 className="bg-input border-input"
               />

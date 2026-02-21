@@ -4,14 +4,24 @@ import { Db, ObjectId } from "mongodb";
 export interface Student {
   _id?: ObjectId;
   enrollmentNo: string;
+  rollNo?: string;
   email: string;
   firstName: string;
   lastName: string;
   password: string; // hashed
   phone: string;
   department: string;
+  program?: string;
   semester: number;
+  year?: number;
   cgpa: number;
+  dateOfBirth?: string;
+  address?: string;
+  guardianName?: string;
+  guardianPhone?: string;
+  photoURL?: string;
+  admissionDate?: string;
+  lastLogin?: string;
   role: "student";
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +58,56 @@ export interface Admin {
 }
 
 export type User = Student | Faculty | Admin;
+export type UserRole = User["role"];
+
+export type LoginUser =
+  | { role: "student"; user: Student; uniqueId: string }
+  | { role: "faculty"; user: Faculty; uniqueId: string }
+  | { role: "admin"; user: Admin; uniqueId: string };
+
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+const normalizeEnrollmentNo = (enrollmentNo: string): string => enrollmentNo.trim().toUpperCase();
+const normalizeEmployeeId = (employeeId: string): string => employeeId.trim().toUpperCase();
+const normalizeAdminId = (adminId: string): string => adminId.trim().toUpperCase();
+
+const normalizeStudentInput = <
+  T extends {
+    enrollmentNo: string;
+    email: string;
+  },
+>(
+  student: T
+): T => ({
+  ...student,
+  enrollmentNo: normalizeEnrollmentNo(student.enrollmentNo),
+  email: normalizeEmail(student.email),
+});
+
+const normalizeFacultyInput = <
+  T extends {
+    employeeId: string;
+    email: string;
+  },
+>(
+  faculty: T
+): T => ({
+  ...faculty,
+  employeeId: normalizeEmployeeId(faculty.employeeId),
+  email: normalizeEmail(faculty.email),
+});
+
+const normalizeAdminInput = <
+  T extends {
+    adminId: string;
+    email: string;
+  },
+>(
+  admin: T
+): T => ({
+  ...admin,
+  adminId: normalizeAdminId(admin.adminId),
+  email: normalizeEmail(admin.email),
+});
 
 // Password hashing utilities
 export async function hashPassword(password: string): Promise<string> {
@@ -61,32 +121,34 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 
 // Student operations
 export async function createStudent(db: Db, studentData: Omit<Student, "_id" | "createdAt" | "updatedAt" | "password" | "role"> & { password: string }): Promise<Student> {
+  const normalizedStudent = normalizeStudentInput(studentData);
   const hashedPassword = await hashPassword(studentData.password);
+  const now = new Date();
 
   const result = await db.collection<Student>("students").insertOne({
-    ...studentData,
+    ...normalizedStudent,
     password: hashedPassword,
     role: "student",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: now,
+    updatedAt: now,
   } as Student);
 
   return {
-    ...studentData,
+    ...normalizedStudent,
     password: hashedPassword,
     role: "student",
     _id: result.insertedId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: now,
+    updatedAt: now,
   };
 }
 
 export async function findStudentByEnrollment(db: Db, enrollmentNo: string): Promise<Student | null> {
-  return db.collection<Student>("students").findOne({ enrollmentNo });
+  return db.collection<Student>("students").findOne({ enrollmentNo: normalizeEnrollmentNo(enrollmentNo) });
 }
 
 export async function findStudentByEmail(db: Db, email: string): Promise<Student | null> {
-  return db.collection<Student>("students").findOne({ email });
+  return db.collection<Student>("students").findOne({ email: normalizeEmail(email) });
 }
 
 export async function getAllStudents(db: Db): Promise<Student[]> {
@@ -94,28 +156,33 @@ export async function getAllStudents(db: Db): Promise<Student[]> {
 }
 
 export async function updateStudent(db: Db, enrollmentNo: string, data: Partial<Omit<Student, "password" | "_id" | "role">>): Promise<Student | null> {
+  const updateData = { ...data };
+  if (updateData.email) {
+    updateData.email = normalizeEmail(updateData.email);
+  }
+
   const result = await db.collection<Student>("students").findOneAndUpdate(
-    { enrollmentNo },
+    { enrollmentNo: normalizeEnrollmentNo(enrollmentNo) },
     {
       $set: {
-        ...data,
+        ...updateData,
         updatedAt: new Date(),
       },
     },
     { returnDocument: "after" }
   );
-  return result.value || null;
+  return result;
 }
 
 export async function deleteStudent(db: Db, enrollmentNo: string): Promise<boolean> {
-  const result = await db.collection<Student>("students").deleteOne({ enrollmentNo });
+  const result = await db.collection<Student>("students").deleteOne({ enrollmentNo: normalizeEnrollmentNo(enrollmentNo) });
   return result.deletedCount > 0;
 }
 
 export async function updateStudentPassword(db: Db, enrollmentNo: string, newPassword: string): Promise<void> {
   const hashedPassword = await hashPassword(newPassword);
   await db.collection<Student>("students").updateOne(
-    { enrollmentNo },
+    { enrollmentNo: normalizeEnrollmentNo(enrollmentNo) },
     {
       $set: {
         password: hashedPassword,
@@ -127,32 +194,34 @@ export async function updateStudentPassword(db: Db, enrollmentNo: string, newPas
 
 // Faculty operations
 export async function createFaculty(db: Db, facultyData: Omit<Faculty, "_id" | "createdAt" | "updatedAt" | "password" | "role"> & { password: string }): Promise<Faculty> {
+  const normalizedFaculty = normalizeFacultyInput(facultyData);
   const hashedPassword = await hashPassword(facultyData.password);
+  const now = new Date();
 
   const result = await db.collection<Faculty>("faculty").insertOne({
-    ...facultyData,
+    ...normalizedFaculty,
     password: hashedPassword,
     role: "faculty",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: now,
+    updatedAt: now,
   } as Faculty);
 
   return {
-    ...facultyData,
+    ...normalizedFaculty,
     password: hashedPassword,
     role: "faculty",
     _id: result.insertedId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: now,
+    updatedAt: now,
   };
 }
 
 export async function findFacultyByEmployeeId(db: Db, employeeId: string): Promise<Faculty | null> {
-  return db.collection<Faculty>("faculty").findOne({ employeeId });
+  return db.collection<Faculty>("faculty").findOne({ employeeId: normalizeEmployeeId(employeeId) });
 }
 
 export async function findFacultyByEmail(db: Db, email: string): Promise<Faculty | null> {
-  return db.collection<Faculty>("faculty").findOne({ email });
+  return db.collection<Faculty>("faculty").findOne({ email: normalizeEmail(email) });
 }
 
 export async function getAllFaculty(db: Db): Promise<Faculty[]> {
@@ -160,50 +229,123 @@ export async function getAllFaculty(db: Db): Promise<Faculty[]> {
 }
 
 export async function updateFaculty(db: Db, employeeId: string, data: Partial<Omit<Faculty, "password" | "_id" | "role">>): Promise<Faculty | null> {
+  const updateData = { ...data };
+  if (updateData.email) {
+    updateData.email = normalizeEmail(updateData.email);
+  }
+
   const result = await db.collection<Faculty>("faculty").findOneAndUpdate(
-    { employeeId },
+    { employeeId: normalizeEmployeeId(employeeId) },
     {
       $set: {
-        ...data,
+        ...updateData,
         updatedAt: new Date(),
       },
     },
     { returnDocument: "after" }
   );
-  return result.value || null;
+  return result;
 }
 
 export async function deleteFaculty(db: Db, employeeId: string): Promise<boolean> {
-  const result = await db.collection<Faculty>("faculty").deleteOne({ employeeId });
+  const result = await db.collection<Faculty>("faculty").deleteOne({ employeeId: normalizeEmployeeId(employeeId) });
   return result.deletedCount > 0;
+}
+
+export async function updateFacultyPassword(db: Db, employeeId: string, newPassword: string): Promise<void> {
+  const hashedPassword = await hashPassword(newPassword);
+  await db.collection<Faculty>("faculty").updateOne(
+    { employeeId: normalizeEmployeeId(employeeId) },
+    {
+      $set: {
+        password: hashedPassword,
+        updatedAt: new Date(),
+      },
+    }
+  );
 }
 
 // Admin operations
 export async function createAdmin(db: Db, adminData: Omit<Admin, "_id" | "createdAt" | "updatedAt" | "password" | "role"> & { password: string }): Promise<Admin> {
+  const normalizedAdmin = normalizeAdminInput(adminData);
   const hashedPassword = await hashPassword(adminData.password);
+  const now = new Date();
 
   const result = await db.collection<Admin>("admins").insertOne({
-    ...adminData,
+    ...normalizedAdmin,
     password: hashedPassword,
     role: "admin",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: now,
+    updatedAt: now,
   } as Admin);
 
   return {
-    ...adminData,
+    ...normalizedAdmin,
     password: hashedPassword,
     role: "admin",
     _id: result.insertedId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: now,
+    updatedAt: now,
   };
 }
 
 export async function findAdminByAdminId(db: Db, adminId: string): Promise<Admin | null> {
-  return db.collection<Admin>("admins").findOne({ adminId });
+  return db.collection<Admin>("admins").findOne({ adminId: normalizeAdminId(adminId) });
 }
 
 export async function findAdminByEmail(db: Db, email: string): Promise<Admin | null> {
-  return db.collection<Admin>("admins").findOne({ email });
+  return db.collection<Admin>("admins").findOne({ email: normalizeEmail(email) });
+}
+
+export async function findUserByIdentifier(db: Db, identifier: string): Promise<LoginUser | null> {
+  const normalizedIdentifier = identifier.trim();
+  if (!normalizedIdentifier) {
+    return null;
+  }
+
+  const normalizedAsId = normalizedIdentifier.toUpperCase();
+  const normalizedAsEmail = normalizedIdentifier.toLowerCase();
+
+  const adminById = await findAdminByAdminId(db, normalizedAsId);
+  if (adminById) {
+    return { role: "admin", user: adminById, uniqueId: adminById.adminId };
+  }
+
+  const facultyById = await findFacultyByEmployeeId(db, normalizedAsId);
+  if (facultyById) {
+    return { role: "faculty", user: facultyById, uniqueId: facultyById.employeeId };
+  }
+
+  const studentById = await findStudentByEnrollment(db, normalizedAsId);
+  if (studentById) {
+    return { role: "student", user: studentById, uniqueId: studentById.enrollmentNo };
+  }
+
+  const adminByEmail = await findAdminByEmail(db, normalizedAsEmail);
+  if (adminByEmail) {
+    return { role: "admin", user: adminByEmail, uniqueId: adminByEmail.adminId };
+  }
+
+  const facultyByEmail = await findFacultyByEmail(db, normalizedAsEmail);
+  if (facultyByEmail) {
+    return { role: "faculty", user: facultyByEmail, uniqueId: facultyByEmail.employeeId };
+  }
+
+  const studentByEmail = await findStudentByEmail(db, normalizedAsEmail);
+  if (studentByEmail) {
+    return { role: "student", user: studentByEmail, uniqueId: studentByEmail.enrollmentNo };
+  }
+
+  return null;
+}
+
+export async function findAnyUserByEmail(db: Db, email: string): Promise<User | null> {
+  const normalized = normalizeEmail(email);
+  const [admin, faculty, student] = await Promise.all([
+    findAdminByEmail(db, normalized),
+    findFacultyByEmail(db, normalized),
+    findStudentByEmail(db, normalized),
+  ]);
+
+  return admin ?? faculty ?? student;
 }
