@@ -1,9 +1,10 @@
-import { getDatabase } from "../lib/mongodb";
-import { createStudent, hashPassword } from "../lib/db-models";
+import { getDatabase } from "../lib/mongodb.ts";
+import { createStudent, createFaculty, createAdmin } from "../lib/db-models.ts";
 
 /**
- * Seed script to populate MongoDB with test student data
- * Run with: node scripts/seed.mjs
+ * Seed script to populate MongoDB with test data
+ * Creates: 1 Admin, 2 Faculty, 3 Students
+ * Run with: npm run seed
  */
 
 async function seed() {
@@ -11,9 +12,55 @@ async function seed() {
     console.log("[v0] Starting database seeding...");
     const db = await getDatabase();
 
-    // Clear existing students collection
+    // Clear existing collections
     await db.collection("students").deleteMany({});
-    console.log("[v0] Cleared existing students");
+    await db.collection("faculty").deleteMany({});
+    await db.collection("admins").deleteMany({});
+    console.log("[v0] Cleared existing data");
+
+    // Create admin
+    const testAdmin = {
+      adminId: "ADMIN001",
+      email: "admin@college.edu",
+      firstName: "Admin",
+      lastName: "User",
+      password: "admin123",
+      phone: "+91-9999999999",
+      permissions: ["manage_students", "manage_faculty", "manage_system"],
+    };
+    await createAdmin(db, testAdmin);
+    console.log(`[v0] Created admin: ${testAdmin.adminId}`);
+
+    // Test faculty data
+    const testFaculty = [
+      {
+        employeeId: "FAC001",
+        email: "faculty1@college.edu",
+        firstName: "Dr.",
+        lastName: "Patel",
+        password: "password123",
+        phone: "+91-9888888888",
+        department: "Computer Science",
+        designation: "Professor",
+        specialization: "Data Science",
+      },
+      {
+        employeeId: "FAC002",
+        email: "faculty2@college.edu",
+        firstName: "Dr.",
+        lastName: "Gupta",
+        password: "password123",
+        phone: "+91-9877777777",
+        department: "Electronics",
+        designation: "Associate Professor",
+        specialization: "Signal Processing",
+      },
+    ];
+
+    for (const faculty of testFaculty) {
+      await createFaculty(db, faculty);
+      console.log(`[v0] Created faculty: ${faculty.employeeId}`);
+    }
 
     // Test students data
     const testStudents = [
@@ -52,19 +99,20 @@ async function seed() {
       },
     ];
 
-    // Insert test students with hashed passwords
     for (const student of testStudents) {
       await createStudent(db, student);
       console.log(`[v0] Created student: ${student.enrollmentNo}`);
     }
 
-    console.log("[v0] Seeding completed successfully!");
-    console.log("\n=== Test Credentials ===");
-    console.log("Enrollment No: EN2024001");
+    console.log("\n[v0] Seeding completed successfully!");
+    console.log("\n=== ADMIN LOGIN ===");
+    console.log("Admin ID: ADMIN001");
+    console.log("Password: admin123");
+    console.log("\n=== FACULTY LOGIN ===");
+    console.log("Faculty ID: FAC001 or FAC002");
     console.log("Password: password123");
-    console.log("\nEnrollment No: EN2024002");
-    console.log("Password: password123");
-    console.log("\nEnrollment No: EN2024003");
+    console.log("\n=== STUDENT LOGIN ===");
+    console.log("Enrollment: EN2024001, EN2024002, or EN2024003");
     console.log("Password: password123");
     console.log("========================\n");
 
