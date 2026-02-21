@@ -1,10 +1,11 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { getDatabase } from "@/lib/mongodb";
+import { findStudentByEnrollment, verifyPassword } from "@/lib/db-models";
 
 /**
  * API route for handling authentication
- * Note: This is a mock implementation for demo purposes
- * Replace with actual authentication logic
+ * Validates credentials against MongoDB
  */
 
 export async function POST(request: NextRequest) {
@@ -12,26 +13,65 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { enrollmentNo, password } = body;
 
-    // Mock credentials validation
-    if (enrollmentNo === "EN2024001" && password === "password123") {
+    if (!enrollmentNo || !password) {
       return NextResponse.json(
         {
-          success: true,
-          token: Buffer.from(`${enrollmentNo}:${Date.now()}`).toString("base64"),
-          message: "Authentication successful",
+          success: false,
+          message: "Enrollment number and password are required",
         },
-        { status: 200 }
+        { status: 400 }
       );
     }
 
+    // Get database and find student
+    const db = await getDatabase();
+    const student = await findStudentByEnrollment(db, enrollmentNo);
+
+    if (!student) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid credentials",
+        },
+        { status: 401 }
+      );
+    }
+
+    // Verify password
+    const isPasswordValid = await verifyPassword(password, student.password);
+
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid credentials",
+        },
+        { status: 401 }
+      );
+    }
+
+    // Generate token (you can use JWT for better security in production)
+    const token = Buffer.from(`${enrollmentNo}:${student._id}:${Date.now()}`).toString("base64");
+
     return NextResponse.json(
       {
-        success: false,
-        message: "Invalid credentials",
+        success: true,
+        token,
+        student: {
+          enrollmentNo: student.enrollmentNo,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          department: student.department,
+          semester: student.semester,
+          cgpa: student.cgpa,
+        },
+        message: "Authentication successful",
       },
-      { status: 401 }
+      { status: 200 }
     );
   } catch (error) {
+    console.error("[v0] Auth error:", error);
     return NextResponse.json(
       {
         success: false,
