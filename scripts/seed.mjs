@@ -1,5 +1,5 @@
-import { connectToDatabase } from "../lib/mongodb.js";
-import { createStudent, hashPassword } from "../lib/db-models.js";
+import { getDatabase } from "../lib/mongodb";
+import { createStudent, hashPassword } from "../lib/db-models";
 
 /**
  * Seed script to populate MongoDB with test student data
@@ -9,7 +9,7 @@ import { createStudent, hashPassword } from "../lib/db-models.js";
 async function seed() {
   try {
     console.log("[v0] Starting database seeding...");
-    const { db } = await connectToDatabase();
+    const db = await getDatabase();
 
     // Clear existing students collection
     await db.collection("students").deleteMany({});
