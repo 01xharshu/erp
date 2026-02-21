@@ -54,13 +54,7 @@ async function seed() {
 
     // Insert test students with hashed passwords
     for (const student of testStudents) {
-      const hashedPassword = await hashPassword(student.password);
-      await db.collection("students").insertOne({
-        ...student,
-        password: hashedPassword,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      await createStudent(db, student);
       console.log(`[v0] Created student: ${student.enrollmentNo}`);
     }
 
