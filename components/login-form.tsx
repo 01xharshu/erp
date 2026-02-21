@@ -8,8 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { toast } from "sonner";
-import { login, storeStudentData } from "@/lib/auth";
-import { mockStudent } from "@/lib/mockData";
 import Link from "next/link";
 
 export function LoginForm() {
@@ -30,23 +28,39 @@ export function LoginForm() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      const response = await fetch("/api/auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          enrollmentNo,
+          password,
+        }),
+      });
 
-    const success = login({ enrollmentNo, password });
+      const data = await response.json();
 
-    if (success) {
-      storeStudentData(mockStudent);
-      toast.success("Login successful!");
-      
-      // Add delay for visual feedback
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      router.push("/dashboard");
-    } else {
-      toast.error("Invalid enrollment number or password");
+      if (data.success) {
+        // Store token in localStorage
+        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("studentData", JSON.stringify(data.student));
+        
+        toast.success("Login successful!");
+        
+        // Add delay for visual feedback
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        router.push("/dashboard");
+      } else {
+        toast.error(data.message || "Invalid credentials");
+      }
+    } catch (error) {
+      console.error("[v0] Login error:", error);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
@@ -80,7 +94,6 @@ export function LoginForm() {
                 disabled={isLoading}
                 className="bg-input border-input"
               />
-              <p className="text-xs text-muted-foreground">Demo: EN2024001</p>
             </div>
 
             {/* Password Field */}
@@ -111,7 +124,6 @@ export function LoginForm() {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground">Demo: password123</p>
             </div>
 
             {/* Remember Me */}
