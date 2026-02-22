@@ -235,7 +235,7 @@ For support, email support@collegecrp.com or open an issue on GitHub.
 
 ## Author
 
-**Aarav Kumar** - [GitHub](https://github.com/01xharshu)
+**Harsh Mishra** - [GitHub](https://github.com/01xharshu)
 
 ---
 
