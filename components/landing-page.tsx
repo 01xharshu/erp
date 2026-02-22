@@ -234,7 +234,7 @@ function CreatorTag({
   href?: string;
 }) {
   const triggerClass =
-    "inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-semibold text-foreground underline-offset-4 transition hover:text-primary hover:underline";
+    "inline-flex cursor-pointer items-center rounded-lg px-1.5 py-0.5 font-semibold text-foreground underline-offset-4 transition hover:text-primary hover:underline";
 
   return (
     <span className="group relative inline-flex items-center">
@@ -255,9 +255,9 @@ function CreatorTag({
             <div className="absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-ring/20 blur-2xl" />
 
             <div className="relative flex items-start gap-3">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/45 via-ring/40 to-accent/45 p-[1.5px]">
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/45 via-ring/40 to-accent/45 p-[1.5px]">
                 <div
-                  className="h-full w-full rounded-[10px] border border-white/40 bg-cover bg-center"
+                  className="h-full w-full rounded-full border border-white/40 bg-cover bg-center"
                   style={{ backgroundImage: `url('${imageUrl}')` }}
                 />
               </div>
@@ -265,9 +265,6 @@ function CreatorTag({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold tracking-tight">{fullName}</p>
                 <p className="text-xs text-muted-foreground">{role}</p>
-                <span className="mt-1.5 inline-flex items-center rounded-full border border-primary/35 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                  VERIFIED PROFILE
-                </span>
               </div>
             </div>
 
@@ -312,17 +309,14 @@ export function LandingPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Button asChild size="sm" variant="outline">
-              <Link href="/demo">Demo</Link>
-            </Button>
+          <div className="flex items-center gap-3">
+            
             <Button asChild size="sm" className="gap-2">
               <Link href="/login">
                 Login
-                <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -650,7 +644,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-4xl px-4 pb-20 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -658,7 +652,7 @@ export function LandingPage() {
             transition={{ duration: 0.35 }}
           >
             <Card className="border-primary/25 bg-gradient-to-r from-primary/15 via-ring/10 to-accent/35">
-              <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+              <CardContent className="flex flex-col gap-4 p-2 sm:flex-row sm:items-center sm:justify-between lg:mt-4 sm:mt-1">
                 <div>
                   <p className="text-lg font-semibold">Ready to run {BRAND.name} like a modern SaaS product?</p>
                   <p className="text-sm text-muted-foreground">Use seeded credentials and start from live modules immediately.</p>
@@ -679,8 +673,8 @@ export function LandingPage() {
           </motion.div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-          <div className="rounded-xl border border-border/70 bg-background/70 px-4 py-3 text-center text-sm text-muted-foreground">
+        <section className="mx-auto max-w-lg px-4 pb-10 sm:px-6 lg:px-8">
+          <div className="rounded-3xl border border-border/70 bg-background/70 px-4 py-3 text-center text-sm text-muted-foreground">
             Made by{" "}
             <CreatorTag
               name={creators[0].name}

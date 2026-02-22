@@ -84,20 +84,7 @@ export function LoginForm() {
         </div>
 
         <div className="grid items-center gap-6 lg:grid-cols-[1fr_430px]">
-          <div className="hidden rounded-3xl border border-border/70 bg-card/60 p-8 shadow-[0_28px_50px_-34px_rgba(2,6,23,0.75)] backdrop-blur-xl lg:block">
-            <p className="text-sm font-semibold text-primary">{BRAND.tagline}</p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-foreground">{BRAND.fullName}</h1>
-            <p className="mt-4 max-w-md text-sm text-muted-foreground">
-              One secure login for students, faculty, and administrators. Use your email or unique ID with password.
-            </p>
-            <div className="mt-7 grid gap-3">
-              {["Email or Unique ID authentication", "Role-based dashboard access", "Fee, attendance, and schedule visibility"].map((item) => (
-                <div key={item} className="rounded-xl border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground/90">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
+  
 
           <Card className="w-full border-border/75 bg-card/80 shadow-[0_30px_60px_-35px_rgba(2,6,23,0.75)] backdrop-blur-xl">
             <CardHeader className="space-y-3">

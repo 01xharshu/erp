@@ -29,16 +29,16 @@ type Point = {
 };
 
 const SOURCES: SourceNode[] = [
-  { id: "students", icon: <Users className="h-5 w-5" />, y: 70 },
-  { id: "faculty", icon: <UserCog className="h-5 w-5" />, y: 130 },
-  { id: "timetable", icon: <CalendarDays className="h-5 w-5" />, y: 190 },
-  { id: "attendance", icon: <ShieldCheck className="h-5 w-5" />, y: 250 },
-  { id: "fees", icon: <CreditCard className="h-5 w-5" />, y: 310 },
-  { id: "assistant", icon: <Bot className="h-5 w-5" />, y: 370 },
+  { id: "students", icon: <Users className="h-4 w-4 sm:h-5 sm:w-5" />, y: 70 },
+  { id: "faculty", icon: <UserCog className="h-4 w-4 sm:h-5 sm:w-5" />, y: 130 },
+  { id: "timetable", icon: <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />, y: 190 },
+  { id: "attendance", icon: <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" />, y: 250 },
+  { id: "fees", icon: <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />, y: 310 },
+  { id: "assistant", icon: <Bot className="h-4 w-4 sm:h-5 sm:w-5" />, y: 370 },
 ];
 
-const HUB_POS: Point = { x: 450, y: 220 };
-const DEST_POS: Point = { x: 760, y: 220 };
+const HUB_POS: Point = { x: 450, y: 200 };
+const DEST_POS: Point = { x: 760, y: 200 };
 const START_X = 92;
 const VIEWBOX_WIDTH = 900;
 const VIEWBOX_HEIGHT = 440;
@@ -60,12 +60,14 @@ function Node({
   children,
   isActive,
   style,
+  small,
 }: {
   icon: ReactNode;
   className?: string;
   children?: ReactNode;
   isActive?: boolean;
   style?: CSSProperties;
+  small?: boolean;
 }) {
   return (
     <motion.div
@@ -85,7 +87,10 @@ function Node({
       }
       transition={{ duration: 1.5, ease: "easeInOut" }}
       className={cn(
-        "absolute z-10 flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-100 bg-white/90 shadow-sm transition-colors dark:border-white/10 dark:bg-black/30",
+        "absolute z-10 flex items-center justify-center rounded-xl sm:rounded-2xl border border-gray-100 bg-white/90 shadow-sm transition-colors dark:border-white/10 dark:bg-black/30",
+        small
+          ? "h-8 w-8 sm:h-14 sm:w-14"
+          : "h-10 w-10 sm:h-14 sm:w-14",
         className
       )}
     >
@@ -187,13 +192,14 @@ export function NucleusArchitecture({ className }: { className?: string }) {
               duration={1.8}
             />
           ))}
-          <FlowPath start={HUB_POS} end={DEST_POS} delay={1.55} duration={1.2} isMain />
+          <FlowPath start={HUB_POS} end={DEST_POS} delay={1} duration={1.2} isMain />
         </svg>
 
         {SOURCES.map((src) => (
           <Node
             key={src.id}
             icon={src.icon}
+            small
             className="-translate-x-1/2 text-slate-500 dark:text-slate-300"
             style={{ left: xPct(START_X), top: yPct(src.y), transform: "translate(-50%, -50%)" }}
           />
@@ -201,11 +207,19 @@ export function NucleusArchitecture({ className }: { className?: string }) {
 
         <Node
           isActive={activeNode === "hub"}
-          icon={<Database className={cn("h-6 w-6 transition-colors", activeNode === "hub" ? "text-blue-500" : "text-slate-700 dark:text-slate-200")} />}
+          icon={
+            <Database
+              className={cn(
+                "h-5 w-5 sm:h-6 sm:w-6 transition-colors",
+                activeNode === "hub" ? "text-blue-500" : "text-slate-700 dark:text-slate-200"
+              )}
+            />
+          }
           className="bg-white dark:bg-black/40"
-          style={{ left: xPct(HUB_POS.x), top: yPct(HUB_POS.y), transform: "translate(-50%, -50%)" }}
+          style={{ left: xPct(HUB_POS.x), top: yPct(HUB_POS.y - 20), transform: "translate(-50%, -50%)" }}
         />
 
+  
         <div className="absolute z-10" style={{ left: xPct(DEST_POS.x), top: yPct(DEST_POS.y), transform: "translate(-50%, -50%)" }}>
           <motion.div
             animate={{
@@ -218,9 +232,9 @@ export function NucleusArchitecture({ className }: { className?: string }) {
                     ]
                   : "0 10px 30px -5px rgba(59,130,246,0.3)",
             }}
-            className="relative flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-[#3B82F6] shadow-xl"
+            className="relative flex h-12 w-12 sm:h-20 sm:w-20 items-center justify-center rounded-2xl sm:rounded-[1.75rem] bg-[#3B82F6] shadow-xl"
           >
-            <Globe className="h-8 w-8 text-white" />
+            <Globe className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
 
             <AnimatePresence>
               {activeNode === "dest" &&
@@ -230,13 +244,13 @@ export function NucleusArchitecture({ className }: { className?: string }) {
                     initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
                     animate={{
                       scale: [0, 1.15, 0],
-                      x: particle.x,
-                      y: particle.y,
+                      x: particle.x * 0.6,
+                      y: particle.y * 0.6,
                       opacity: [0, 1, 0],
                     }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.9, ease: "easeOut", delay: index * 0.03 }}
-                    className="absolute h-1.5 w-1.5 rounded-full bg-blue-200 blur-[1px]"
+                    className="absolute h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-blue-200 blur-[1px]"
                   />
                 ))}
             </AnimatePresence>
