@@ -7,21 +7,68 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { mockSubjects } from "@/lib/mockData";
-import { Download, FileText } from "lucide-react";
+import { getAuthToken } from "@/lib/auth";
+import { useState, useEffect } from "react";
+import { Download, FileText, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 export default function SubjectsPage() {
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const token = getAuthToken();
+        const res = await fetch("/api/timetable", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          // Extract unique subjects from the timetable schedule
+          const timetable = data.data[0];
+          const subjectMap = new Map();
+          
+          timetable.schedule.forEach((day: any) => {
+            day.slots.forEach((slot: any) => {
+              if (slot.subject && !subjectMap.has(slot.subject)) {
+                subjectMap.set(slot.subject, {
+                  id: slot.id || Math.random().toString(),
+                  name: slot.subject,
+                  code: (slot.subject.substring(0, 3) + "-301").toUpperCase(),
+                  faculty: slot.facultyName || "Global Faculty",
+                  credits: 4,
+                  type: "Core",
+                  syllabusPDF: "#"
+                });
+              }
+            });
+          });
+          
+          setSubjects(Array.from(subjectMap.values()));
+        } else {
+          setSubjects(mockSubjects);
+        }
+      } catch (err) {
+        setSubjects(mockSubjects);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSubjects();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+        <p className="text-muted-foreground animate-pulse">Analyzing your curriculum...</p>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -33,15 +80,9 @@ export default function SubjectsPage() {
 
       {/* Subjects grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockSubjects.map((subject) => (
+        {subjects.map((subject) => (
           <Card
             key={subject.id}
-            className="
-              hover:shadow-lg transition-all duration-200
-              border border-border/40 hover:border-border/70
-              bg-card/50 backdrop-blur-sm
-              flex flex-col rounded-xl overflow-hidden
-            "
           >
             <CardHeader className="flex-1 pb-4">
               <div className="flex items-start justify-between gap-4">
@@ -58,9 +99,8 @@ export default function SubjectsPage() {
                   </CardDescription>
                 </div>
 
-                {/* Changed <a> → <Link> → now Link is used */}
                 <Button variant="outline" size="sm" asChild className="shrink-0">
-                  <Link href={subject.syllabusPDF} download>
+                  <Link href={subject.syllabusPDF}>
                     <Download className="h-4 w-4 mr-1.5" />
                     Syllabus
                   </Link>
@@ -72,7 +112,7 @@ export default function SubjectsPage() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground text-xs">Faculty</p>
-                  <p className="font-medium">{subject.faculty}</p>
+                  <p className="font-medium truncate">{subject.faculty}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Credits</p>
@@ -95,7 +135,7 @@ export default function SubjectsPage() {
       </div>
 
       {/* Semester Summary */}
-      <Card className="border border-border/40 bg-card/50">
+      <Card>
         <CardHeader>
           <CardTitle>Semester Summary</CardTitle>
         </CardHeader>
@@ -103,47 +143,20 @@ export default function SubjectsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="text-center sm:text-left">
               <p className="text-sm text-muted-foreground">Total Subjects</p>
-              <p className="text-2xl font-bold mt-1">{mockSubjects.length}</p>
+              <p className="text-2xl font-bold mt-1">{subjects.length}</p>
             </div>
             <div className="text-center sm:text-left">
               <p className="text-sm text-muted-foreground">Total Credits</p>
               <p className="text-2xl font-bold mt-1">
-                {mockSubjects.reduce((sum, s) => sum + s.credits, 0)}
+                {subjects.reduce((sum, s) => sum + s.credits, 0)}
               </p>
             </div>
             <div className="text-center sm:text-left">
               <p className="text-sm text-muted-foreground">Core Subjects</p>
               <p className="text-2xl font-bold mt-1">
-                {mockSubjects.filter((s) => s.type === "Core").length}
+                {subjects.filter((s) => s.type === "Core").length}
               </p>
             </div>
-          </div>
-
-          {/* Small table */}
-          <div className="overflow-x-auto rounded-md border border-border/30 bg-background/50">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Type</TableHead>
-                  <TableHead className="text-right text-xs">Count</TableHead>
-                  <TableHead className="text-right text-xs">Total Credits</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {["Core", "Elective", "Lab"].map((type) => {
-                  const subjectsOfType = mockSubjects.filter((s) => s.type === type);
-                  return (
-                    <TableRow key={type} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="font-medium text-sm">{type}</TableCell>
-                      <TableCell className="text-right text-sm">{subjectsOfType.length}</TableCell>
-                      <TableCell className="text-right text-sm font-medium">
-                        {subjectsOfType.reduce((sum, s) => sum + s.credits, 0)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
           </div>
         </CardContent>
       </Card>

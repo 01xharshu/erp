@@ -32,6 +32,19 @@ export async function GET(request: NextRequest) {
 
   try {
     const db = await getDatabase();
+    const enrollmentNo = request.nextUrl.searchParams.get("enrollmentNo");
+    
+    if (enrollmentNo) {
+      const student = await findStudentByEnrollment(db, enrollmentNo);
+      return NextResponse.json(
+        {
+          success: true,
+          data: student ? [serializeStudent(student)] : [],
+        },
+        { status: 200 }
+      );
+    }
+
     const students = await getAllStudents(db);
     const data = students.map((student) => serializeStudent(student));
 
@@ -112,6 +125,7 @@ export async function POST(request: NextRequest) {
           cgpa: toNumber(body.cgpa, 0),
           rollNo: String(body.rollNo ?? generatedEnrollmentNo.slice(-3)).trim(),
           program: String(body.program ?? "").trim() || undefined,
+          section: String(body.section ?? "").trim().toUpperCase() || undefined,
           dateOfBirth: String(body.dateOfBirth ?? "").trim() || undefined,
           address: String(body.address ?? "").trim() || undefined,
           guardianName: String(body.guardianName ?? "").trim() || undefined,
@@ -221,6 +235,7 @@ export async function PUT(request: NextRequest) {
       cgpa: body.cgpa !== undefined ? toNumber(body.cgpa, existing.cgpa) : existing.cgpa,
       rollNo: body.rollNo !== undefined ? String(body.rollNo).trim() : existing.rollNo,
       program: body.program !== undefined ? String(body.program).trim() : existing.program,
+      section: body.section !== undefined ? String(body.section).trim().toUpperCase() : existing.section,
       dateOfBirth: body.dateOfBirth !== undefined ? String(body.dateOfBirth).trim() : existing.dateOfBirth,
       address: body.address !== undefined ? String(body.address).trim() : existing.address,
       guardianName: body.guardianName !== undefined ? String(body.guardianName).trim() : existing.guardianName,

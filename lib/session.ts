@@ -8,6 +8,11 @@ export interface SessionPayload {
   email: string;
   role: AppUserRole;
   issuedAt: number;
+  enrollmentNo?: string;
+  employeeId?: string;
+  adminId?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export function createSessionToken(payload: Omit<SessionPayload, "issuedAt">): string {

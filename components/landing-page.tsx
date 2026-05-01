@@ -295,8 +295,8 @@ export function LandingPage() {
   const activePreview = useMemo(() => rolePreviewMap[activeRole], [activeRole]);
 
   return (
-    <div className="app-shell-bg app-shell-grid min-h-dvh p-2 md:p-4">
-      <div className="relative mx-auto min-h-[calc(100dvh-1rem)] max-w-[1600px] overflow-hidden rounded-[30px] border border-border/75 bg-background/92 shadow-[0_24px_65px_-42px_rgba(2,6,23,0.75)] backdrop-blur-xl md:min-h-[calc(100dvh-2rem)]">
+    <div className="app-shell-bg app-shell-grid min-h-dvh">
+      <div className="relative min-h-dvh w-full overflow-hidden bg-background/50 backdrop-blur-xl transition-all duration-500">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-card/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
@@ -361,7 +361,7 @@ export function LandingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.12 + index * 0.08, duration: 0.3 }}
                 >
-                  <Card className="border-border/70 bg-background/65 py-3 shadow-sm backdrop-blur">
+                  <Card>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">{item.label}</p>
                       <p className="mt-1 text-xl font-semibold">{item.value}</p>
@@ -374,7 +374,7 @@ export function LandingPage() {
 
           <motion.div initial="hidden" animate="show" variants={reveal} transition={{ duration: 0.45, delay: 0.12 }}>
             <Card
-              className="group relative overflow-hidden border-border/75 bg-background/75 shadow-xl backdrop-blur-xl"
+              className="group relative overflow-hidden"
               onMouseMove={(event) => {
                 const rect = event.currentTarget.getBoundingClientRect();
                 const x = ((event.clientX - rect.left) / rect.width) * 100;
@@ -425,14 +425,14 @@ export function LandingPage() {
 
                     <div className="grid gap-2 sm:grid-cols-3">
                       {activePreview.kpis.map((kpi) => (
-                        <div key={kpi.label} className="rounded-lg border border-border/70 bg-background/80 p-3">
+                        <div key={kpi.label} className="rounded-lg border border-border/75 bg-background/70 p-3">
                           <p className="text-[11px] text-muted-foreground">{kpi.label}</p>
                           <p className="mt-1 text-sm font-semibold">{kpi.value}</p>
                         </div>
                       ))}
                     </div>
 
-                    <div className="rounded-xl border border-border/70 bg-background/80 p-4">
+                    <div className="rounded-xl border border-border/75 bg-background/70 p-4">
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">Login Preview</p>
                       <p className="mt-2 text-sm">{activePreview.loginHint}</p>
                       <p className="text-sm">
@@ -491,7 +491,7 @@ export function LandingPage() {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.35, delay: 0.04 }}
             >
-              <Card className="overflow-hidden border-border/70 bg-background/70">
+              <Card className="overflow-hidden">
                 <CardHeader>
                   <CardTitle>Module Ecosystem</CardTitle>
                   <CardDescription>Continuous workflow from academics to administration.</CardDescription>
@@ -534,7 +534,7 @@ export function LandingPage() {
                 "Razorpay-style fee payment demo flow",
                 "Role-aware AI assistant on dashboards",
               ].map((feature) => (
-                <Card key={feature} className="border-border/70 bg-background/75">
+                <Card key={feature}>
                   <CardContent className="flex items-start gap-3 p-4">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
                     <p className="text-sm">{feature}</p>
@@ -624,7 +624,7 @@ export function LandingPage() {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.3, delay: 0.04 }}
             >
-              <Card className="h-full border-border/70 bg-background/75">
+              <Card className="h-full">
                 <CardHeader>
                   <CardTitle>Frequently Asked Questions</CardTitle>
                   <CardDescription>Key product behavior and setup details most teams ask first.</CardDescription>

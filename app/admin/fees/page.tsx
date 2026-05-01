@@ -4,10 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { getAuthToken } from "@/lib/auth";
 import { toast } from "sonner";
 import { IndianRupee, AlertTriangle, CheckCircle2, RotateCcw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type FeeStatus = "Paid" | "Pending" | "Overdue";
@@ -49,6 +51,23 @@ export default function AdminFeesPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | FeeStatus>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedFee, setSelectedFee] = useState<FeeRecord | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [isModalLoading, setIsModalLoading] = useState(false);
+
+  // ─── Extra Filter State ───
+  const [enrollmentSearch, setEnrollmentSearch] = useState("");
+  const [semesterFilter, setSemesterFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+
+  const filteredFees = useMemo(() => {
+    return fees.filter(f => {
+      if (enrollmentSearch && !f.enrollmentNo.toLowerCase().includes(enrollmentSearch.toLowerCase())) return false;
+      if (semesterFilter !== "all" && String(f.semester) !== semesterFilter) return false;
+      if (categoryFilter !== "all" && f.category !== categoryFilter) return false;
+      return true;
+    });
+  }, [fees, enrollmentSearch, semesterFilter, categoryFilter]);
 
   const getAuthHeaders = useCallback((): HeadersInit => {
     const token = getAuthToken();
@@ -115,6 +134,27 @@ export default function AdminFeesPage() {
     }
   };
 
+  const handleViewStudent = async (fee: FeeRecord) => {
+    setSelectedFee(fee);
+    setIsModalLoading(true);
+
+    try {
+      const response = await fetch(`/api/admin/students?enrollmentNo=${fee.enrollmentNo}`, {
+        headers: getAuthHeaders(),
+      });
+      const data = await response.json();
+      if (data.success && data.data && data.data.length > 0) {
+        setSelectedStudent(data.data[0]);
+      } else {
+        setSelectedStudent(null);
+      }
+    } catch {
+      setSelectedStudent(null);
+    } finally {
+      setIsModalLoading(false);
+    }
+  };
+
   const stats = useMemo(
     () => [
       {
@@ -156,25 +196,54 @@ export default function AdminFeesPage() {
           <h1 className="text-3xl font-bold text-foreground">Fees Management</h1>
           <p className="text-muted-foreground mt-2">Monitor payments, pending dues, and mark settlement status</p>
         </div>
-        <div className="w-full md:w-56">
-          <Select
-            value={statusFilter}
-            onValueChange={(value: "all" | FeeStatus) => {
-              setStatusFilter(value);
-              fetchFees(value);
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="Paid">Paid</SelectItem>
-              <SelectItem value="Pending">Pending</SelectItem>
-              <SelectItem value="Overdue">Overdue</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      </div>
+
+      {/* ─── Enhanced Filter Bar ─── */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <Input
+          placeholder="Search enrollment no..."
+          value={enrollmentSearch}
+          onChange={(e) => setEnrollmentSearch(e.target.value)}
+          className="rounded-xl"
+        />
+        <Select
+          value={statusFilter}
+          onValueChange={(value: "all" | FeeStatus) => {
+            setStatusFilter(value);
+            fetchFees(value);
+          }}
+        >
+          <SelectTrigger className="rounded-xl">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="Paid">Paid</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
+            <SelectItem value="Overdue">Overdue</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={semesterFilter} onValueChange={setSemesterFilter}>
+          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Semester" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Semesters</SelectItem>
+            {[...new Set(fees.map(f => f.semester))].sort((a, b) => a - b).map(s => (
+              <SelectItem key={s} value={String(s)}>Semester {s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Category" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {[...new Set(fees.map(f => f.category))].sort().map(c => (
+              <SelectItem key={c} value={c}>{c}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(enrollmentSearch || statusFilter !== "all" || semesterFilter !== "all" || categoryFilter !== "all") && (
+          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => { setEnrollmentSearch(""); setStatusFilter("all"); setSemesterFilter("all"); setCategoryFilter("all"); fetchFees("all"); }}>Clear All</Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -216,7 +285,7 @@ export default function AdminFeesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {fees.map((fee) => (
+                {filteredFees.map((fee) => (
                   <TableRow key={fee.feeId}>
                     <TableCell className="font-medium">{fee.enrollmentNo}</TableCell>
                     <TableCell>
@@ -238,6 +307,13 @@ export default function AdminFeesPage() {
                       {fee.status === "Paid" ? `${fee.modeOfPayment || "N/A"} • ${fee.paidDate || ""}` : "Not paid"}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleViewStudent(fee)}
+                      >
+                        Details
+                      </Button>
                       {fee.status !== "Paid" && (
                         <Button
                           size="sm"
@@ -275,11 +351,98 @@ export default function AdminFeesPage() {
             </Table>
           </div>
 
-          {fees.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">No fee records found for this filter.</div>
+          {filteredFees.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">No fee records match the current filters.</div>
           )}
         </CardContent>
       </Card>
+
+      {/* Student Fee Modal Reference */}
+      <Dialog open={!!selectedFee} onOpenChange={(open) => !open && setSelectedFee(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Fee & Student Details</DialogTitle>
+            <DialogDescription>
+              Comprehensive information regarding the selected fee entry.
+            </DialogDescription>
+          </DialogHeader>
+
+          {isModalLoading ? (
+            <div className="py-12 flex justify-center items-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <div className="space-y-6 pt-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-secondary/30 border border-border">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Student</p>
+                  <p className="font-semibold text-foreground text-lg mb-0.5">
+                    {selectedStudent ? `${selectedStudent.firstName} ${selectedStudent.lastName}` : "Unknown"}
+                  </p>
+                  <p className="text-sm font-medium text-primary">ENR: {selectedFee?.enrollmentNo}</p>
+                  {selectedStudent && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {selectedStudent.program || selectedStudent.department} • Year {selectedStudent.year}
+                    </p>
+                  )}
+                </div>
+
+                <div className="p-4 rounded-2xl bg-secondary/30 border border-border">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+                  <p className="font-semibold text-foreground text-lg mb-0.5">₹{selectedFee?.amount}</p>
+                  <div className="mt-1">
+                    <Badge variant={selectedFee?.status === "Paid" ? "secondary" : selectedFee?.status === "Overdue" ? "destructive" : "outline"}>
+                      {selectedFee?.status}
+                    </Badge>
+                  </div>
+                  {selectedFee?.status === "Paid" && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      via {selectedFee.modeOfPayment} on {selectedFee.paidDate}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <h4 className="text-sm font-semibold mb-3 text-foreground">Entry Details</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-sm py-2 border-b border-border">
+                    <span className="text-muted-foreground font-medium">Description</span>
+                    <span className="font-semibold">{selectedFee?.description}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm py-2 border-b border-border">
+                    <span className="text-muted-foreground font-medium">Category</span>
+                    <span className="font-semibold">{selectedFee?.category}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm py-2 border-b border-border">
+                    <span className="text-muted-foreground font-medium">Semester Target</span>
+                    <span className="font-semibold">Semester {selectedFee?.semester}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm py-2 border-b border-border">
+                    <span className="text-muted-foreground font-medium">Due Date</span>
+                    <span className="font-semibold text-destructive">{selectedFee?.dueDate}</span>
+                  </div>
+                </div>
+              </div>
+
+              {selectedFee?.status !== "Paid" && (
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    className="flex-1" 
+                    variant="default"
+                    onClick={() => {
+                      updateFeeStatus(selectedFee!.feeId, "Paid");
+                      setSelectedFee(null);
+                    }}
+                  >
+                    Mark as Paid Offline
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

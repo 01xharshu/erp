@@ -1,6 +1,89 @@
 import bcrypt from "bcryptjs";
 import { Db, ObjectId } from "mongodb";
 
+export interface Message {
+  role: "user" | "assistant" | "system";
+  content: string;
+  createdAt: Date;
+}
+
+export interface ChatSession {
+  _id?: ObjectId;
+  sessionId: string;
+  userId: string;
+  role: "student" | "faculty" | "admin";
+  title: string;
+  messages: Message[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Notice {
+  _id?: ObjectId;
+  noticeId: string;
+  title: string;
+  content: string;
+  priority: "High" | "Medium" | "Low";
+  targetRole: "all" | "student" | "faculty";
+  isUnread?: boolean; // dynamic for client
+  createdAt: Date;
+}
+
+export interface AttendanceRecord {
+  _id?: ObjectId;
+  enrollmentNo: string;
+  date: string; // YYYY-MM-DD
+  period: string;
+  subject: string;
+  status: "P" | "A" | "L" | "M";
+  facultyId: string;
+  createdAt: Date;
+}
+
+export interface SystemMeta {
+  _id?: ObjectId;
+  type: "academic_structure";
+  programs: string[];
+  semesters: number[];
+  sections: string[];
+  departments: string[];
+  designations: string[];
+  specializations: string[];
+  updatedAt: Date;
+}
+
+export interface ReminderItem {
+  _id?: string;
+  userId: string;
+  message: string;
+  remindAt: string;
+  status: "pending" | "notified" | "completed";
+  createdAt: Date;
+}
+
+export interface TimetableSlot {
+  time: string; // e.g., "09:00 - 10:00 AM"
+  subject: string;
+  facultyId: string; // Employee ID
+  room: string;
+}
+
+export interface TimetableDay {
+  day: string; // e.g., "Monday"
+  slots: TimetableSlot[];
+}
+
+export interface Timetable {
+  _id?: ObjectId;
+  department: string;
+  program: string;
+  semester: number;
+  section: string;
+  schedule: TimetableDay[];
+  periods?: string[] | null;
+  updatedAt: Date;
+}
+
 export interface Student {
   _id?: ObjectId;
   enrollmentNo: string;
@@ -14,6 +97,7 @@ export interface Student {
   program?: string;
   semester: number;
   year?: number;
+  section?: string;
   cgpa: number;
   dateOfBirth?: string;
   address?: string;
@@ -25,6 +109,8 @@ export interface Student {
   role: "student";
   createdAt: Date;
   updatedAt: Date;
+  resetCode?: string;
+  resetCodeExpires?: Date;
 }
 
 export interface Faculty {
@@ -41,6 +127,8 @@ export interface Faculty {
   role: "faculty";
   createdAt: Date;
   updatedAt: Date;
+  resetCode?: string;
+  resetCodeExpires?: Date;
 }
 
 export interface Admin {
@@ -55,6 +143,8 @@ export interface Admin {
   role: "admin";
   createdAt: Date;
   updatedAt: Date;
+  resetCode?: string;
+  resetCodeExpires?: Date;
 }
 
 export type User = Student | Faculty | Admin;
@@ -145,6 +235,13 @@ export async function createStudent(db: Db, studentData: Omit<Student, "_id" | "
 
 export async function findStudentByEnrollment(db: Db, enrollmentNo: string): Promise<Student | null> {
   return db.collection<Student>("students").findOne({ enrollmentNo: normalizeEnrollmentNo(enrollmentNo) });
+}
+
+export async function getStudentAttendance(db: Db, enrollmentNo: string): Promise<AttendanceRecord[]> {
+  return db.collection<AttendanceRecord>("attendance")
+    .find({ enrollmentNo: normalizeEnrollmentNo(enrollmentNo) })
+    .sort({ date: -1 })
+    .toArray();
 }
 
 export async function findStudentByEmail(db: Db, email: string): Promise<Student | null> {
@@ -297,6 +394,47 @@ export async function findAdminByEmail(db: Db, email: string): Promise<Admin | n
   return db.collection<Admin>("admins").findOne({ email: normalizeEmail(email) });
 }
 
+export async function getAllAdmins(db: Db): Promise<Admin[]> {
+  return db.collection<Admin>("admins").find({}).toArray();
+}
+
+export async function updateAdmin(db: Db, adminId: string, data: Partial<Omit<Admin, "password" | "_id" | "role">>): Promise<Admin | null> {
+  const updateData = { ...data };
+  if (updateData.email) {
+    updateData.email = normalizeEmail(updateData.email);
+  }
+
+  const result = await db.collection<Admin>("admins").findOneAndUpdate(
+    { adminId: normalizeAdminId(adminId) },
+    {
+      $set: {
+        ...updateData,
+        updatedAt: new Date(),
+      },
+    },
+    { returnDocument: "after" }
+  );
+  return result;
+}
+
+export async function updateAdminPassword(db: Db, adminId: string, newPassword: string): Promise<void> {
+  const hashedPassword = await hashPassword(newPassword);
+  await db.collection<Admin>("admins").updateOne(
+    { adminId: normalizeAdminId(adminId) },
+    {
+      $set: {
+        password: hashedPassword,
+        updatedAt: new Date(),
+      },
+    }
+  );
+}
+
+export async function deleteAdmin(db: Db, adminId: string): Promise<boolean> {
+  const result = await db.collection<Admin>("admins").deleteOne({ adminId: normalizeAdminId(adminId) });
+  return result.deletedCount > 0;
+}
+
 export async function findUserByIdentifier(db: Db, identifier: string): Promise<LoginUser | null> {
   const normalizedIdentifier = identifier.trim();
   if (!normalizedIdentifier) {
@@ -348,4 +486,120 @@ export async function findAnyUserByEmail(db: Db, email: string): Promise<User | 
   ]);
 
   return admin ?? faculty ?? student;
+}
+
+// ChatSession operations
+export async function createChatSession(db: Db, sessionData: Omit<ChatSession, "_id" | "createdAt" | "updatedAt">): Promise<ChatSession> {
+  const now = new Date();
+  const session = {
+    ...sessionData,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const result = await db.collection<ChatSession>("chat_sessions").insertOne(session as ChatSession);
+  return { ...session, _id: result.insertedId } as ChatSession;
+}
+
+export async function findChatSessionsByUser(db: Db, userId: string, role: string): Promise<ChatSession[]> {
+  return db.collection<ChatSession>("chat_sessions")
+    .find({ userId, role: role as any })
+    .sort({ updatedAt: -1 })
+    .toArray();
+}
+
+export async function findChatSessionById(db: Db, sessionId: string): Promise<ChatSession | null> {
+  return db.collection<ChatSession>("chat_sessions").findOne({ sessionId });
+}
+
+export async function updateChatSessionMessages(db: Db, sessionId: string, messages: Message[], title?: string): Promise<void> {
+  const update: any = {
+    $set: {
+      messages,
+      updatedAt: new Date(),
+    },
+  };
+  if (title) {
+    update.$set.title = title;
+  }
+  await db.collection<ChatSession>("chat_sessions").updateOne({ sessionId }, update);
+}
+
+export async function deleteChatSession(db: Db, sessionId: string): Promise<boolean> {
+  const result = await db.collection<ChatSession>("chat_sessions").deleteOne({ sessionId });
+  return result.deletedCount > 0;
+}
+
+// Notice operations
+export async function createNotice(db: Db, noticeData: Omit<Notice, "_id" | "createdAt">): Promise<Notice> {
+  const notice = { ...noticeData, createdAt: new Date() };
+  const result = await db.collection<Notice>("notices").insertOne(notice as Notice);
+  return { ...notice, _id: result.insertedId } as Notice;
+}
+
+export async function getAllNotices(db: Db, role?: string): Promise<Notice[]> {
+  const query: any = role && role !== "admin" ? { targetRole: { $in: ["all", role] } } : {};
+  return db.collection<Notice>("notices").find(query).sort({ createdAt: -1 }).toArray();
+}
+
+export async function deleteNotice(db: Db, noticeId: string): Promise<boolean> {
+  const result = await db.collection<Notice>("notices").deleteOne({ noticeId });
+  return result.deletedCount > 0;
+}
+
+// Attendance operations
+export async function markAttendance(db: Db, record: Omit<AttendanceRecord, "_id" | "createdAt">): Promise<void> {
+  await db.collection<AttendanceRecord>("attendance").updateOne(
+    { enrollmentNo: record.enrollmentNo, date: record.date, period: record.period },
+    { $set: { ...record, createdAt: new Date() } },
+    { upsert: true }
+  );
+}
+
+// Meta operations
+export async function getSystemMeta(db: Db): Promise<SystemMeta> {
+  const meta = await db.collection<SystemMeta>("system_meta").findOne({ type: "academic_structure" });
+  if (meta) return meta;
+  
+  // Create default if not exists
+  const defaultMeta: SystemMeta = {
+    type: "academic_structure",
+    programs: ["B.Tech", "M.Tech", "BCA", "MCA"],
+    semesters: [1, 2, 3, 4, 5, 6, 7, 8],
+    sections: ["A", "B", "C"],
+    departments: ["Computer Science", "Information Technology", "Mechanical", "Electrical", "Civil"],
+    designations: ["Professor", "Associate Professor", "Assistant Professor", "Lecturer"],
+    specializations: ["AI/ML", "Cloud Computing", "Data Science", "Cybersecurity"],
+    updatedAt: new Date()
+  };
+  await db.collection("system_meta").insertOne(defaultMeta);
+  return defaultMeta;
+}
+
+export async function updateSystemMeta(db: Db, updates: Partial<Omit<SystemMeta, "type">>): Promise<void> {
+  await db.collection<SystemMeta>("system_meta").updateOne(
+    { type: "academic_structure" },
+    { $set: { ...updates, updatedAt: new Date() } },
+    { upsert: true }
+  );
+}
+
+// Reminder operations
+export async function getUserReminders(db: Db, userId: string): Promise<ReminderItem[]> {
+  const reminders = await db.collection<any>("reminders")
+    .find({ userId, status: "pending" })
+    .toArray();
+  
+  return reminders.map(r => ({
+    ...r,
+    _id: r._id.toString(),
+    reminderId: r._id.toString() // Map for the widget which expects reminderId
+  }));
+}
+
+export async function updateReminderStatus(db: Db, userId: string, reminderId: string, status: ReminderItem["status"]): Promise<void> {
+  const { ObjectId } = await import("mongodb");
+  await db.collection("reminders").updateOne(
+    { _id: new ObjectId(reminderId), userId },
+    { $set: { status } }
+  );
 }

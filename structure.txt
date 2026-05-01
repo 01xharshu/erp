@@ -1,0 +1,138 @@
+.
+├── LOCAL-AI-SETUP.md
+├── README.md
+├── app
+│   ├── (auth)
+│   │   ├── forgot-password
+│   │   └── login
+│   ├── (dashboard)
+│   │   ├── dashboard
+│   │   ├── layout.tsx
+│   │   └── menu
+│   ├── admin
+│   │   ├── admins
+│   │   ├── dashboard
+│   │   ├── faculty
+│   │   ├── fees
+│   │   ├── layout.tsx
+│   │   ├── menu
+│   │   ├── settings
+│   │   ├── students
+│   │   └── timetable
+│   ├── ai-assistant
+│   │   └── page.tsx
+│   ├── api
+│   │   ├── admin
+│   │   ├── assignments
+│   │   ├── attendance
+│   │   ├── auth
+│   │   ├── chat
+│   │   ├── fees
+│   │   ├── local-ai
+│   │   ├── middleware.ts
+│   │   ├── notices
+│   │   ├── profile
+│   │   ├── reminders
+│   │   ├── results
+│   │   ├── student
+│   │   ├── subjects
+│   │   └── timetable
+│   ├── demo
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── logout
+│   │   └── page.tsx
+│   └── page.tsx
+├── components
+│   ├── admin-navbar.tsx
+│   ├── admin-sidebar.tsx
+│   ├── chatbot-widget.tsx
+│   ├── command-search.tsx
+│   ├── error-boundary.tsx
+│   ├── floating-action-bar.tsx
+│   ├── forgot-password-form.tsx
+│   ├── landing-page.tsx
+│   ├── login-form.tsx
+│   ├── mode-aware-content.tsx
+│   ├── mode-switcher.tsx
+│   ├── navbar.tsx
+│   ├── nucleus-architecture.tsx
+│   ├── protected-route.tsx
+│   ├── sidebar.tsx
+│   ├── theme-provider.tsx
+│   ├── theme-toggle.tsx
+│   └── ui
+│       ├── accordion.tsx
+│       ├── alert.tsx
+│       ├── avatar.tsx
+│       ├── badge.tsx
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── checkbox.tsx
+│       ├── dialog.tsx
+│       ├── dropdown-menu.tsx
+│       ├── input.tsx
+│       ├── label.tsx
+│       ├── progress.tsx
+│       ├── scroll-area.tsx
+│       ├── select.tsx
+│       ├── separator.tsx
+│       ├── table.tsx
+│       ├── tabs.tsx
+│       └── textarea.tsx
+├── components.json
+├── hooks
+│   └── index.ts
+├── lib
+│   ├── ai
+│   │   └── local-rag.ts
+│   ├── api-auth.ts
+│   ├── auth.ts
+│   ├── brand.ts
+│   ├── cli.ts
+│   ├── config.ts
+│   ├── constants.ts
+│   ├── db-models.ts
+│   ├── fee-models.ts
+│   ├── fetch.ts
+│   ├── id-rules.ts
+│   ├── mockData.ts
+│   ├── mode-context.tsx
+│   ├── mongodb.ts
+│   ├── session.ts
+│   └── utils.ts
+├── next-env.d.ts
+├── next.config.js
+├── package-lock.json
+├── package.json
+├── pnpm-lock.yaml
+├── postcss.config.js
+├── proxy.ts
+├── scripts
+│   ├── build-direct.js
+│   ├── build-now.js
+│   ├── build.js
+│   ├── check-setup.js
+│   ├── clean-build.js
+│   ├── clear-cache.js
+│   ├── clear-db.ts
+│   ├── force-rebuild.js
+│   ├── fresh-install.js
+│   ├── ingest.ts
+│   ├── install-deps.js
+│   ├── npm-install.sh
+│   ├── rebuild-shadcn.js
+│   ├── seed.ts
+│   └── simple-install.js
+├── structure.txt
+├── tailwind.config.ts
+├── test-usechat.ts
+├── tsconfig.json
+├── tsconfig.tsbuildinfo
+└── types
+    ├── bcryptjs.d.ts
+    └── index.ts
+
+42 directories, 94 files

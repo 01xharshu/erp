@@ -441,7 +441,7 @@ export default function FeesPage() {
         </Alert>
       )}
 
-      <Card className="bg-muted/40">
+      <Card className="bg-primary/5 border-primary/20 text-primary-foreground/90">
         <CardHeader>
           <CardTitle className="text-sm">Important Information</CardTitle>
         </CardHeader>
@@ -493,7 +493,7 @@ export default function FeesPage() {
           </DialogHeader>
 
           <div className="space-y-4">
-            <Card className="bg-muted/30">
+            <Card className="bg-primary/5 border-primary/20">
               <CardContent className="pt-4 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Payable items</span>

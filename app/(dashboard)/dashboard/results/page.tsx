@@ -25,6 +25,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { mockExamResults } from "@/lib/mockData";
+import { getStudentData } from "@/lib/auth";
+import { Upload, FileDown, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function ResultsPage() {
   const [activeTab, setActiveTab] = useState("semester");
@@ -48,6 +51,62 @@ export default function ResultsPage() {
     if (percentage >= 60) return "text-orange-600";
     return "text-red-600";
   };
+
+  const userData = getStudentData() as any;
+  const isFaculty = userData?.role === "faculty";
+
+  if (isFaculty) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-gradient-to-r from-primary/12 via-ring/10 to-blue-400/10 p-5">
+          <div className="flex items-center gap-3">
+            <Upload className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Grade Book</h1>
+              <p className="text-muted-foreground">Upload and manage exam results for your classes</p>
+            </div>
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Needs Grading</CardTitle>
+            <CardDescription>Recent exams and continuous assessments</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {["Mid-term Exam - CS101", "Lab Final - CS201", "Assignment 3 - CS301"].map((exam, i) => (
+              <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-xl gap-4 hover:border-primary/50 transition-colors">
+                <div>
+                  <h3 className="font-bold text-lg">{exam}</h3>
+                  <p className="text-sm text-muted-foreground">Pending 42/45 submissions</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline"><FileDown className="h-4 w-4 mr-2"/> Template</Button>
+                  <Button><Upload className="h-4 w-4 mr-2"/> Upload Marks</Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Uploads</CardTitle>
+          </CardHeader>
+          <CardContent>
+             <div className="flex items-center gap-3 p-4 border border-green-500/20 bg-green-500/5 rounded-xl text-green-700 dark:text-green-400">
+               <CheckCircle2 className="h-5 w-5" />
+               <div className="flex-1">
+                 <p className="font-bold">Quiz 1 - Data Structures</p>
+                 <p className="text-xs">Uploaded on Dec 10, 2024</p>
+               </div>
+               <Badge className="bg-green-500/20 text-green-700 border-none hover:bg-green-500/30">Published</Badge>
+             </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -215,7 +274,7 @@ export default function ResultsPage() {
       </Tabs>
 
       {/* Grade Scale Reference */}
-      <Card className="bg-muted/50">
+      <Card className="bg-primary/5 border-primary/20">
         <CardHeader>
           <CardTitle className="text-sm">Grade Scale</CardTitle>
         </CardHeader>

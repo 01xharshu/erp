@@ -6,6 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import {
   Accordion,
@@ -33,8 +34,11 @@ import {
   CheckCircle,
   Clock,
   FileText,
+  PlusCircle,
+  Users
 } from "lucide-react";
 import { toast } from "sonner";
+import { getStudentData } from "@/lib/auth";
 
 export default function AssignmentsPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -77,6 +81,50 @@ export default function AssignmentsPage() {
     const diff = due.getTime() - today.getTime();
     return Math.ceil(diff / (1000 * 3600 * 24));
   };
+
+  const userData = getStudentData() as any;
+  const isFaculty = userData?.role === "faculty";
+
+  if (isFaculty) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-gradient-to-r from-primary/12 via-ring/10 to-blue-400/10 p-5">
+          <div className="flex items-center gap-3">
+            <FileText className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Assignments Hub</h1>
+              <p className="text-muted-foreground">Create, distribute and grade assignments</p>
+            </div>
+          </div>
+          <Button className="gap-2"><PlusCircle className="h-4 w-4"/> Create Assignment</Button>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Needs Grading</CardTitle>
+            <CardDescription>Recent submissions from your students</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {["Assignment 1 - Data Structures", "Lab Report - Algorithms"].map((exam, i) => (
+              <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-xl gap-4 hover:border-primary/50 transition-colors">
+                <div className="flex items-start gap-4">
+                   <div className="p-3 bg-secondary/30 rounded-xl"><Users className="h-5 w-5 text-primary"/></div>
+                   <div>
+                     <h3 className="font-bold text-lg">{exam}</h3>
+                     <p className="text-sm text-muted-foreground">CS-10{i+1} • Due Dec 15</p>
+                   </div>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Badge variant="secondary">38/45 Submitted</Badge>
+                  <Button variant="outline">Review</Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

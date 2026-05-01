@@ -28,7 +28,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getStudentData } from "@/lib/auth";
+import { getUserData, getAuthToken, setAuthSession } from "@/lib/auth";
 import { mockStudent } from "@/lib/mockData";
 import { Edit2, Download, FileText, Phone, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
@@ -40,20 +40,68 @@ export default function ProfilePage() {
   const [editData, setEditData] = useState<any>(null);
 
   useEffect(() => {
-    const data = getStudentData();
+    const data = getUserData();
     setStudentData(data || mockStudent);
-    setEditData(data || mockStudent);
+    // Deep clone data for edit mode
+    setEditData(data ? JSON.parse(JSON.stringify(data)) : mockStudent);
   }, []);
 
   if (!studentData) return null;
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      const nameParts = editData.name.trim().split(" ");
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(" ");
 
-    toast.success("Profile updated successfully!");
-    setIsEditing(false);
-    setIsSaving(false);
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uniqueId: studentData.uniqueId,
+          role: studentData.role,
+          firstName,
+          lastName,
+          email: editData.email,
+          phone: editData.phone,
+          dateOfBirth: editData.dateOfBirth,
+          address: editData.address
+        })
+      });
+
+      if (!res.ok) throw new Error("Failed to update profile");
+      
+      const token = getAuthToken();
+      if (token && studentData) {
+        const updatedUser = { 
+          ...studentData, 
+          name: editData.name,
+          firstName,
+          lastName,
+          email: editData.email,
+          phone: editData.phone,
+          dateOfBirth: editData.dateOfBirth,
+          address: editData.address 
+        };
+        setAuthSession(token, updatedUser);
+        setStudentData(updatedUser);
+        window.dispatchEvent(new Event("storage"));
+      }
+
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+      
+      // Force reload to reflect across the entire dashboard (sidebar, navbar)
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+
+    } catch (error) {
+      toast.error("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDownloadDocument = (docType: string) => {
@@ -95,12 +143,19 @@ export default function ProfilePage() {
             </Avatar>
             <div className="flex-1">
               <h2 className="text-2xl font-bold">{studentData.name}</h2>
-              <p className="text-muted-foreground mt-1">{studentData.program}</p>
+              <p className="text-muted-foreground mt-1">
+                {studentData.role === "faculty" && studentData.designation ? studentData.designation : studentData.program || "Staff"}
+              </p>
               <div className="flex gap-2 mt-2">
-                <Badge>{studentData.department}</Badge>
-                <Badge variant="outline">
-                  Year {studentData.year}, Sem {studentData.semester}
-                </Badge>
+                {studentData.department && <Badge>{studentData.department}</Badge>}
+                {studentData.role === "student" && studentData.year && (
+                  <Badge variant="outline">
+                    Year {studentData.year}, Sem {studentData.semester}
+                  </Badge>
+                )}
+                {studentData.role === "faculty" && studentData.specialization && (
+                  <Badge variant="outline">{studentData.specialization}</Badge>
+                )}
               </div>
               <div className="mt-4 space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -243,66 +298,97 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Guardian Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Guardian Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Guardian Name</p>
-                  <p className="font-medium">{studentData.guardianName}</p>
+          {/* Guardian Information (Student Only) */}
+          {studentData.role === "student" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Guardian Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Guardian Name</p>
+                    <p className="font-medium">{studentData.guardianName || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Phone</p>
+                    <p className="font-medium">{studentData.guardianPhone || "N/A"}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">{studentData.guardianPhone}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
-        {/* Academic Information Tab */}
+        {/* Academic/Professional Information Tab */}
         <TabsContent value="academic" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Academic Details</CardTitle>
+              <CardTitle className="text-base">
+                {studentData.role === "student" ? "Academic Details" : "Professional Details"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Program</p>
-                  <p className="font-medium">{studentData.program}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Department</p>
-                  <p className="font-medium">{studentData.department}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Enrollment No.</p>
-                  <p className="font-medium">{studentData.enrollmentNo}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Roll No.</p>
-                  <p className="font-medium">{studentData.rollNo}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Current Year</p>
-                  <p className="font-medium">Year {studentData.year}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Current Semester</p>
-                  <p className="font-medium">Semester {studentData.semester}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Admission Date</p>
-                  <p className="font-medium">{studentData.admissionDate}</p>
-                </div>
+                {studentData.role === "student" ? (
+                  <>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Program</p>
+                      <p className="font-medium">{studentData.program}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Department</p>
+                      <p className="font-medium">{studentData.department}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Enrollment No.</p>
+                      <p className="font-medium">{studentData.enrollmentNo}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Roll No.</p>
+                      <p className="font-medium">{studentData.rollNo}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Current Year</p>
+                      <p className="font-medium">Year {studentData.year}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Current Semester</p>
+                      <p className="font-medium">Semester {studentData.semester}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Admission Date</p>
+                      <p className="font-medium">{studentData.admissionDate}</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Role</p>
+                      <p className="font-medium capitalize">{studentData.role}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Department</p>
+                      <p className="font-medium">{studentData.department || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Designation</p>
+                      <p className="font-medium">{studentData.designation || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Employee ID</p>
+                      <p className="font-medium">{studentData.employeeId || studentData.adminId || studentData.uniqueId}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Specialization</p>
+                      <p className="font-medium">{studentData.specialization || "N/A"}</p>
+                    </div>
+                  </>
+                )}
                 <div>
                   <p className="text-sm text-muted-foreground">Last Login</p>
                   <p className="font-medium">
-                    {new Date(studentData.lastLogin).toLocaleDateString()}
+                    {studentData.lastLogin ? new Date(studentData.lastLogin).toLocaleDateString() : "Just now"}
                   </p>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -42,18 +42,125 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { mockAttendance, mockSubjects, calculateAttendancePercentage } from "@/lib/mockData";
-import { CheckCircle, XCircle, Calendar, FileUp } from "lucide-react";
+import { mockAttendance, mockSubjects } from "@/lib/mockData";
+import { CheckCircle, XCircle, Calendar, FileUp, Users } from "lucide-react";
 import { toast } from "sonner";
+import { getStudentData, getAuthToken } from "@/lib/auth";
 
 export default function AttendancePage() {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [selectedMonth, setSelectedMonth] = useState("December");
-  const [leaveReason, setLeaveReason] = useState("");
+  const [_attendanceData, setAttendanceData] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [studentsInClass, setStudentsInClass] = useState<any[]>([]);
+  const [selectedClass, setSelectedClass] = useState<any>(null);
+  const [markedAttendance, setMarkedAttendance] = useState<Record<string, "P" | "A">>({});
+  const [isLoading, setIsLoading] = useState(true);
   const [leaveDate, setLeaveDate] = useState("");
+  const [leaveReason, setLeaveReason] = useState("");
   const [isSubmittingLeave, setIsSubmittingLeave] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [selectedMonth, setSelectedMonth] = useState("January");
 
-  const attendancePercentage = calculateAttendancePercentage();
+  const userData = getStudentData() as any;
+  const isFaculty = userData?.role === "faculty";
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = getAuthToken();
+        const headers = { Authorization: `Bearer ${token}` };
+        
+        // Fetch personal stats/attendance
+        const profRes = await fetch("/api/profile", { headers });
+        const profData = await profRes.json();
+        
+        if (isFaculty) {
+          // Fetch faculty schedule to see today's classes
+          const timeRes = await fetch("/api/timetable", { headers });
+          const timeData = await timeRes.json();
+          if (timeData.success && timeData.data.length > 0) {
+            const today = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
+            const todaySchedule = timeData.data[0].schedule.find((d: any) => d.day === today);
+            setClasses(todaySchedule?.slots || []);
+          }
+        } else {
+          // Fetch student attendance records
+          setAttendanceData(profData.data?.attendanceRecords || []);
+        }
+      } catch (e) {
+        console.error("Failed to fetch attendance data", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [isFaculty]);
+
+  const loadStudentsForClass = async (cls: any) => {
+    setSelectedClass(cls);
+    setIsLoading(true);
+    try {
+      const token = getAuthToken();
+      // Use existing students list API but filter by program/sem/sec
+      // Assuming cls.classContext looks like "Program Sem X Sec Y"
+      const match = cls.classContext.match(/(.+) Sem (\d+) Sec (.+)/);
+      if (match) {
+        const [_, program, semester, section] = match;
+        const res = await fetch(`/api/admin/students?program=${encodeURIComponent(program)}&semester=${semester}&section=${section}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          setStudentsInClass(data.data);
+          // Initialize attendance as all Present
+          const initial: any = {};
+          data.data.forEach((s: any) => initial[s.enrollmentNo] = "P");
+          setMarkedAttendance(initial);
+        }
+      }
+    } catch (err) {
+      toast.error("Failed to load student list");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const submitAttendance = async () => {
+    setIsLoading(true);
+    try {
+      const token = getAuthToken();
+      const records = Object.entries(markedAttendance).map(([enrollmentNo, status]) => ({
+        enrollmentNo,
+        status,
+        date: new Date().toISOString().split('T')[0],
+        period: selectedClass.time,
+        subject: selectedClass.subject,
+        facultyId: userData.uniqueId
+      }));
+
+      // In real scenario, we'd have a bulk upload API. 
+      // For now, we'll hit markAttendance for each (or create a bulk route)
+      // Let's assume we have a bulk route /api/admin/attendance
+      const res = await fetch("/api/admin/attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ records })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Attendance marked successfully!");
+        setSelectedClass(null);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (err) {
+      toast.error("Network error saving attendance");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const attendancePercentage = userData?.attendanceRate ?? 85;
 
   // Per-subject attendance
   const getSubjectAttendance = (subjectName: string) => {
@@ -110,6 +217,105 @@ export default function AttendancePage() {
         return "Other";
     }
   };
+
+  if (isFaculty) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-gradient-to-r from-primary/12 via-ring/10 to-amber-400/10 p-5">
+          <div className="flex items-center gap-3">
+            <Users className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Class Attendance</h1>
+              <p className="text-muted-foreground">Manage and record attendance for your assigned classes</p>
+            </div>
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Today's Schedule</CardTitle>
+            <CardDescription>Select a class to mark attendance for today ({new Date().toDateString()})</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {classes.length > 0 ? classes.map((cls, i) => (
+              <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-xl gap-4 hover:border-primary/50 transition-colors bg-card/40">
+                <div className="flex items-center gap-4">
+                  <div className="p-2.5 bg-primary/10 rounded-xl text-primary font-bold">
+                    {cls.time.split(' - ')[0]}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">{cls.subject}</h3>
+                    <p className="text-sm text-muted-foreground">{cls.classContext} • Room {cls.room}</p>
+                  </div>
+                </div>
+                
+                <Dialog open={selectedClass === cls && !!selectedClass} onOpenChange={(open) => !open && setSelectedClass(null)}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => loadStudentsForClass(cls)}>Mark Attendance</Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Mark Attendance: {cls.subject}</DialogTitle>
+                      <DialogDescription>{cls.classContext} • {cls.time}</DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4 py-4">
+                      <div className="rounded-xl border border-border overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted/50">
+                            <tr>
+                              <th className="p-3 text-left">Enrollment</th>
+                              <th className="p-3 text-left">Name</th>
+                              <th className="p-3 text-center">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {studentsInClass.map((student) => (
+                              <tr key={student.enrollmentNo} className="border-t border-border hover:bg-muted/30">
+                                <td className="p-3 font-mono text-xs">{student.enrollmentNo}</td>
+                                <td className="p-3 font-medium">{student.firstName} {student.lastName}</td>
+                                <td className="p-3">
+                                  <div className="flex justify-center gap-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant={markedAttendance[student.enrollmentNo] === "P" ? "default" : "outline"}
+                                      className="h-8 w-10 px-0"
+                                      onClick={() => setMarkedAttendance(prev => ({ ...prev, [student.enrollmentNo]: "P" }))}
+                                    >P</Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant={markedAttendance[student.enrollmentNo] === "A" ? "destructive" : "outline"}
+                                      className="h-8 w-10 px-0"
+                                      onClick={() => setMarkedAttendance(prev => ({ ...prev, [student.enrollmentNo]: "A" }))}
+                                    >A</Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      <div className="flex justify-end gap-3 pt-4 border-t">
+                        <Button variant="ghost" onClick={() => setSelectedClass(null)}>Cancel</Button>
+                        <Button onClick={submitAttendance} disabled={isLoading}>
+                          {isLoading ? "Saving..." : "Save Attendance"}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )) : (
+              <div className="py-20 text-center border-2 border-dashed rounded-3xl opacity-40">
+                <p>No classes scheduled for you today.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -170,7 +376,7 @@ export default function AttendancePage() {
       </div>
 
       {/* Overall Attendance Card */}
-      <Card className="bg-gradient-to-r from-primary/14 via-ring/10 to-background/40">
+      <Card className="border-primary/20 bg-primary/5">
         <CardHeader>
           <CardTitle>Overall Attendance</CardTitle>
           <CardDescription>Current semester attendance percentage</CardDescription>

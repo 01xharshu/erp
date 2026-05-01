@@ -2,23 +2,39 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAuthenticated } from "@/lib/auth";
+import { isAuthenticated, getUserRole, UserRole } from "@/lib/auth";
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+export function ProtectedRoute({ 
+  children,
+  requiredRole
+}: { 
+  children: React.ReactNode;
+  requiredRole?: UserRole | UserRole[];
+}) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Add a small delay to ensure client-side hydration is complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      console.log("[v0] Auth check - isAuthenticated:", isAuthenticated());
+      const authStatus = isAuthenticated();
+      const userRole = getUserRole();
       
-      if (!isAuthenticated()) {
+      if (!authStatus) {
         console.log("[v0] Not authenticated, redirecting to login");
         router.push("/login");
+      } else if (requiredRole) {
+        const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+        if (userRole && !roles.includes(userRole)) {
+          console.log(`[v0] Role mismatch: ${userRole} accessed ${roles.join("/")} route. Redirecting...`);
+          if (userRole === "admin") {
+            router.push("/admin/dashboard");
+          } else {
+            router.push("/dashboard");
+          }
+        } else {
+          setIsLoading(false);
+        }
       } else {
-        console.log("[v0] Authenticated, showing dashboard");
         setIsLoading(false);
       }
     };

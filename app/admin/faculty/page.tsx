@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getAuthToken } from "@/lib/auth";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 type Faculty = {
   _id: string;
@@ -51,11 +53,89 @@ export default function FacultyManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FacultyForm>(initialForm);
+  const [meta, setMeta] = useState<{ 
+    departments: string[], 
+    designations: string[], 
+    specializations: string[] 
+  }>({
+    departments: [],
+    designations: [],
+    specializations: []
+  });
+
+  // ─── Filter State ───
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterDept, setFilterDept] = useState("all");
+  const [filterDesignation, setFilterDesignation] = useState("all");
+  const [filterSpecialization, setFilterSpecialization] = useState("all");
+
+  const filteredFaculty = useMemo(() => {
+    return faculty.filter(f => {
+      const q = searchQuery.toLowerCase();
+      if (q && !f.firstName.toLowerCase().includes(q) && !f.lastName.toLowerCase().includes(q) && !f.employeeId.toLowerCase().includes(q) && !f.email.toLowerCase().includes(q)) return false;
+      if (filterDept !== "all" && f.department !== filterDept) return false;
+      if (filterDesignation !== "all" && f.designation !== filterDesignation) return false;
+      if (filterSpecialization !== "all" && f.specialization !== filterSpecialization) return false;
+      return true;
+    });
+  }, [faculty, searchQuery, filterDept, filterDesignation, filterSpecialization]);
+
+  // Modal for adding new meta options
+  const [isAddMetaOpen, setIsAddMetaOpen] = useState(false);
+  const [metaUpdateType, setMetaUpdateType] = useState<'departments' | 'designations' | 'specializations'>('departments');
+  const [newMetaValue, setNewMetaValue] = useState("");
 
   const getAuthHeaders = useCallback((): HeadersInit => {
     const token = getAuthToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, []);
+
+  const fetchMeta = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/metadata", { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (data.success) {
+        setMeta({
+          departments: data.data.departments || [],
+          designations: data.data.designations || [],
+          specializations: data.data.specializations || []
+        });
+      }
+    } catch (e) {
+      console.error("Failed to fetch meta", e);
+    }
+  }, [getAuthHeaders]);
+
+  useEffect(() => {
+    void fetchMeta();
+  }, [fetchMeta]);
+
+  const updateRemoteMeta = async (updates: any) => {
+    try {
+      await fetch("/api/admin/metadata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(updates)
+      });
+      await fetchMeta();
+    } catch (err) {
+      console.error("Meta update failed", err);
+    }
+  };
+
+  const handleAddMeta = async () => {
+    if (!newMetaValue.trim()) return;
+    const newList = [...(meta[metaUpdateType] || []), newMetaValue.trim()].sort();
+    await updateRemoteMeta({ [metaUpdateType]: newList });
+    setNewMetaValue("");
+    setIsAddMetaOpen(false);
+  };
+
+  const handleDeleteMeta = async (type: any, val: string) => {
+    if (!confirm(`Remove "${val}" from system?`)) return;
+    const newList = (meta[type as keyof typeof meta] || []).filter(i => i !== val);
+    await updateRemoteMeta({ [type]: newList });
+  };
 
   const fetchFaculty = useCallback(async () => {
     try {
@@ -179,7 +259,8 @@ export default function FacultyManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Faculty</h1>
@@ -197,7 +278,7 @@ export default function FacultyManagement() {
             <DialogTitle>{editingId ? "Edit Faculty" : "Add New Faculty"}</DialogTitle>
             <DialogDescription>
               {editingId
-                ? "Update faculty profile details. Employee ID remains fixed."
+                ? "Update faculty profile details. Leave password blank to keep current credential."
                 : "Employee ID is auto-assigned in FAC### format when created."}
             </DialogDescription>
           </DialogHeader>
@@ -227,34 +308,95 @@ export default function FacultyManagement() {
               value={formData.lastName}
               onChange={(event) => setFormData({ ...formData, lastName: event.target.value })}
             />
-            {!editingId && (
-              <Input
-                type="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={(event) => setFormData({ ...formData, password: event.target.value })}
-              />
-            )}
             <Input
-              placeholder="Phone"
-              value={formData.phone}
-              onChange={(event) => setFormData({ ...formData, phone: event.target.value })}
+              type="password"
+              placeholder={editingId ? "New Password (Leave blank to keep current)" : "Password"}
+              value={formData.password}
+              onChange={(event) => setFormData({ ...formData, password: event.target.value })}
             />
-            <Input
-              placeholder="Department"
-              value={formData.department}
-              onChange={(event) => setFormData({ ...formData, department: event.target.value })}
-            />
-            <Input
-              placeholder="Designation"
-              value={formData.designation}
-              onChange={(event) => setFormData({ ...formData, designation: event.target.value })}
-            />
-            <Input
-              placeholder="Specialization"
-              value={formData.specialization}
-              onChange={(event) => setFormData({ ...formData, specialization: event.target.value })}
-            />
+            {/* Department Dropdown */}
+            <div className="space-y-1">
+              <Label className="text-xs">Department</Label>
+              <Select 
+                value={formData.department} 
+                onValueChange={(val) => {
+                  if (val === "__ADD_NEW__") { setMetaUpdateType('departments'); setIsAddMetaOpen(true); }
+                  else if (val.startsWith("__DELETE__")) handleDeleteMeta('departments', val.replace("__DELETE__", ""));
+                  else setFormData({ ...formData, department: val });
+                }}
+              >
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder="Select Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(meta.departments || []).map(d => (
+                    <div key={d} className="flex items-center justify-between group px-1">
+                      <SelectItem value={d} className="flex-1">{d}</SelectItem>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteMeta('departments', d); }} className="p-1 opacity-0 group-hover:opacity-100 hover:text-red-500">
+                        <Trash2 className="h-3 w-3"/>
+                      </button>
+                    </div>
+                  ))}
+                  <SelectItem value="__ADD_NEW__" className="text-primary font-bold">+ Add New</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Designation Dropdown */}
+            <div className="space-y-1">
+              <Label className="text-xs">Designation</Label>
+              <Select 
+                value={formData.designation} 
+                onValueChange={(val) => {
+                  if (val === "__ADD_NEW__") { setMetaUpdateType('designations'); setIsAddMetaOpen(true); }
+                  else if (val.startsWith("__DELETE__")) handleDeleteMeta('designations', val.replace("__DELETE__", ""));
+                  else setFormData({ ...formData, designation: val });
+                }}
+              >
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder="Select Designation" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(meta.designations || []).map(d => (
+                    <div key={d} className="flex items-center justify-between group px-1">
+                      <SelectItem value={d} className="flex-1">{d}</SelectItem>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteMeta('designations', d); }} className="p-1 opacity-0 group-hover:opacity-100 hover:text-red-500">
+                        <Trash2 className="h-3 w-3"/>
+                      </button>
+                    </div>
+                  ))}
+                  <SelectItem value="__ADD_NEW__" className="text-primary font-bold">+ Add New</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Specialization Dropdown */}
+            <div className="space-y-1">
+              <Label className="text-xs">Specialization</Label>
+              <Select 
+                value={formData.specialization} 
+                onValueChange={(val) => {
+                  if (val === "__ADD_NEW__") { setMetaUpdateType('specializations'); setIsAddMetaOpen(true); }
+                  else if (val.startsWith("__DELETE__")) handleDeleteMeta('specializations', val.replace("__DELETE__", ""));
+                  else setFormData({ ...formData, specialization: val });
+                }}
+              >
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder="Select Specialization" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(meta.specializations || []).map(s => (
+                    <div key={s} className="flex items-center justify-between group px-1">
+                      <SelectItem value={s} className="flex-1">{s}</SelectItem>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteMeta('specializations', s); }} className="p-1 opacity-0 group-hover:opacity-100 hover:text-red-500">
+                        <Trash2 className="h-3 w-3"/>
+                      </button>
+                    </div>
+                  ))}
+                  <SelectItem value="__ADD_NEW__" className="text-primary font-bold">+ Add New</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="col-span-full flex gap-2">
               <Button type="submit" className="flex-1">
@@ -275,7 +417,50 @@ export default function FacultyManagement() {
             {faculty.length} faculty member{faculty.length !== 1 ? "s" : ""} in the system
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* ─── Filter Bar ─── */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Input
+              placeholder="Search name or ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="col-span-2 md:col-span-1 rounded-xl"
+            />
+            <Select value={filterDept} onValueChange={setFilterDept}>
+              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Department" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {[...new Set(faculty.map(f => f.department))].sort().map(d => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterDesignation} onValueChange={setFilterDesignation}>
+              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Designation" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Designations</SelectItem>
+                {[...new Set(faculty.map(f => f.designation))].sort().map(d => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterSpecialization} onValueChange={setFilterSpecialization}>
+              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Specialization" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Specializations</SelectItem>
+                {[...new Set(faculty.map(f => f.specialization))].sort().map(s => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {(filterDept !== "all" || filterDesignation !== "all" || filterSpecialization !== "all" || searchQuery) && (
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">{filteredFaculty.length} result{filteredFaculty.length !== 1 ? "s" : ""}</p>
+              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => { setSearchQuery(""); setFilterDept("all"); setFilterDesignation("all"); setFilterSpecialization("all"); }}>Clear Filters</Button>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -290,7 +475,7 @@ export default function FacultyManagement() {
                 </tr>
               </thead>
               <tbody>
-                {faculty.map((member) => (
+                {filteredFaculty.map((member) => (
                   <tr key={member._id} className="border-b border-border transition-colors hover:bg-secondary/50">
                     <td className="px-4 py-3">{member.employeeId}</td>
                     <td className="px-4 py-3">
@@ -320,9 +505,34 @@ export default function FacultyManagement() {
             </table>
           </div>
 
-          {faculty.length === 0 && <div className="py-8 text-center text-muted-foreground">No faculty found.</div>}
+          {filteredFaculty.length === 0 && <div className="py-8 text-center text-muted-foreground">No faculty match the current filters.</div>}
         </CardContent>
       </Card>
     </div>
+
+      {/* Add Meta Option Dialog */}
+      <Dialog open={isAddMetaOpen} onOpenChange={setIsAddMetaOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New {metaUpdateType.slice(0, -1)}</DialogTitle>
+            <DialogDescription>
+              Enter the name of the new {metaUpdateType.slice(0, -1)} to add to the system.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input 
+              placeholder={`New ${metaUpdateType.slice(0, -1)} name...`}
+              value={newMetaValue}
+              onChange={(e) => setNewMetaValue(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAddMeta()}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsAddMetaOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddMeta}>Add Option</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { GraduationCap } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout, getStudentData } from "@/lib/auth";
 import { mockNotices } from "@/lib/mockData";
@@ -53,13 +54,15 @@ export function Navbar() {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-border/70 bg-card/95 backdrop-blur-xl">
-      <div className="flex items-center justify-between gap-2 px-4 py-3 pl-16 md:px-5 md:pl-5">
+    <header className="sticky top-0 z-30 w-full border-b border-border/50 bg-card/80 backdrop-blur-md">
+      <div className="flex items-center justify-between gap-2 px-4 py-2 md:px-6">
         {/* Left - App Info / Semester */}
-        <div className="min-w-0">
-          <div className="md:hidden">
-            <p className="truncate text-sm font-semibold text-foreground">{BRAND.name}</p>
-            <p className="truncate text-xs text-muted-foreground">{studentName}</p>
+        <div className="min-w-0 lg:w-48">
+          <div className="md:hidden flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white shrink-0 shadow-sm shadow-primary/20">
+              <GraduationCap className="h-4 w-4" />
+            </div>
+            <p className="truncate text-sm font-bold text-foreground tracking-tight">{BRAND.name}</p>
           </div>
           <div className="hidden md:flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Semester:</span>
@@ -111,7 +114,7 @@ export function Navbar() {
                 <span className="sr-only">Notifications</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuContent align="end" className="w-80 z-[100] bg-background shadow-2xl opacity-100 backdrop-blur-none border-border">
               <div className="p-4">
                 <h3 className="font-semibold mb-3">Notifications</h3>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -159,7 +162,7 @@ export function Navbar() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-56 z-[100] bg-background shadow-2xl opacity-100 backdrop-blur-none border-border">
               <div className="px-4 py-3 border-b border-border">
                 <p className="text-sm font-semibold">{studentName}</p>
                 <p className="text-xs text-muted-foreground">

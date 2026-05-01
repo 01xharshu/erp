@@ -92,7 +92,21 @@ export default function RootLayout({
       <body className="font-sans antialiased">  {/* font-sans now uses Google Sans via var */}
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
-          <Toaster position="top-right" />
+          <Toaster 
+            position="bottom-left" 
+            closeButton 
+            richColors 
+            theme="system" 
+            expand={true}
+            visibleToasts={6}
+            toastOptions={{
+              className: "liquid-glass rounded-2xl border-white/10 shadow-2xl saturate-[1.5] brightness-[1.05]",
+              style: {
+                background: "rgba(255, 255, 255, 0.45)",
+                backdropFilter: "blur(32px) saturate(190%)",
+              }
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

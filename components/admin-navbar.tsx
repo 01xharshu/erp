@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Moon, Sun, LogOut, Users, BookOpen, IndianRupee } from "lucide-react";
+import { Moon, Sun, LogOut, Users, BookOpen, IndianRupee, GraduationCap } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,12 +57,14 @@ export function AdminNavbar() {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-border/70 bg-card/95 backdrop-blur-xl">
-      <div className="flex items-center justify-between gap-2 px-4 py-3 pl-16 md:px-5 md:pl-5">
-        <div className="min-w-0">
-          <div className="md:hidden">
-            <p className="truncate text-sm font-semibold text-foreground">{BRAND.adminConsoleName}</p>
-            <p className="truncate text-xs text-muted-foreground">{adminUniqueId}</p>
+    <header className="sticky top-0 z-30 w-full border-b border-border/50 bg-card/80 backdrop-blur-md">
+      <div className="flex items-center justify-between gap-2 px-4 py-2 md:px-6">
+        <div className="min-w-0 lg:w-48">
+          <div className="md:hidden flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white shrink-0 shadow-sm shadow-primary/20">
+              <GraduationCap className="h-4 w-4" />
+            </div>
+            <p className="truncate text-sm font-bold text-foreground tracking-tight">{BRAND.adminConsoleName}</p>
           </div>
           <div className="hidden md:flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Access:</span>
@@ -95,7 +97,7 @@ export function AdminNavbar() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-56 z-[100] bg-background shadow-2xl opacity-100 backdrop-blur-none border-border">
               <div className="px-4 py-3 border-b border-border">
                 <p className="text-sm font-semibold">{adminName}</p>
                 <p className="text-xs text-muted-foreground">{adminUniqueId}</p>

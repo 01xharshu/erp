@@ -154,6 +154,11 @@ export async function POST(request: NextRequest) {
       uniqueId: authUser.uniqueId,
       email: authUser.email,
       role: authUser.role,
+      enrollmentNo: authUser.enrollmentNo,
+      employeeId: authUser.employeeId,
+      adminId: authUser.adminId,
+      firstName: authUser.firstName,
+      lastName: authUser.lastName,
     });
 
     return NextResponse.json(

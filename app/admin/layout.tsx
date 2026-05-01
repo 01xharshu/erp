@@ -6,7 +6,6 @@ import { getUserRole, isAuthenticated } from "@/lib/auth";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { AdminNavbar } from "@/components/admin-navbar";
 import { ChatbotWidget } from "@/components/chatbot-widget";
-import { AdminMobileBottomNav } from "@/components/admin-mobile-bottom-nav";
 
 export default function AdminLayout({
   children,
@@ -55,7 +54,6 @@ export default function AdminLayout({
           </main>
         </div>
       </div>
-      <AdminMobileBottomNav />
       <ChatbotWidget />
     </div>
   );

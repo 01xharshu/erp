@@ -19,6 +19,7 @@ import {
   BarChart3,
   Building2,
   ClipboardList,
+  X,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,10 @@ const getCommands = (role: AppRole): CommandItem[] => {
   return studentCommands;
 };
 
+import { useChat } from "@ai-sdk/react";
+import { Sparkles, Loader2, ArrowUpRight } from "lucide-react";
+import { BRAND } from "@/lib/brand";
+
 export function CommandSearch({
   role,
   className,
@@ -74,12 +79,22 @@ export function CommandSearch({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const { messages, append, isLoading: aiLoading } = useChat({
+    api: "/api/ai/chat",
+    initialMessages: [],
+  });
 
   const commands = useMemo(() => getCommands(role), [role]);
 
   const filteredCommands = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (!normalized) return commands;
+    if (!normalized) return commands.slice(0, 5);
     return commands.filter((item) => {
       const haystack = [item.label, item.description, item.href, ...item.keywords].join(" ").toLowerCase();
       return haystack.includes(normalized);
@@ -112,88 +127,166 @@ export function CommandSearch({
     }
   };
 
-  const submitFirstResult = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (filteredCommands.length > 0) {
-      runCommand(filteredCommands[0].href);
-    }
+  const handleAiSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    
+    // Clear previous AI messages
+    append({
+      role: "user",
+      content: `Context search for: ${query}`,
+    });
   };
+
+  const lastAiResponse = useMemo(() => {
+    const assistantMessages = messages.filter(m => m.role === "assistant");
+    return assistantMessages.length > 0 ? assistantMessages[assistantMessages.length - 1].content : null;
+  }, [messages]);
+
+  if (!mounted) return null;
 
   return (
     <>
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         onClick={() => setOpen(true)}
-        className={cn("hidden min-w-[280px] items-center justify-between gap-3 rounded-full border-border/75 bg-background/86 px-4 text-muted-foreground md:inline-flex", className)}
+        className={cn(
+          "hidden min-w-[240px] items-center justify-between gap-3 rounded-full border border-border bg-secondary/30 py-2.5 px-4 text-muted-foreground md:inline-flex",
+          "hover:bg-secondary/60 hover:text-foreground transition-all duration-300 group",
+          className
+        )}
       >
-        <span className="inline-flex items-center gap-2 text-muted-foreground">
-          <Search className="h-4 w-4" />
-          Search anything...
+        <span className="inline-flex items-center gap-2.5">
+          <Search className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
+          <span className="text-xs font-medium tracking-tight">Search or ask AI...</span>
         </span>
-        <kbd className="rounded-md border border-border/80 bg-muted/70 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-          <Command className="mr-0.5 inline h-3 w-3" />
+        <kbd className="rounded-lg border border-white/20 bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-foreground/40 uppercase tracking-widest shadow-inner">
+          <Command className="mr-0.5 inline h-2.5 w-2.5 align-middle opacity-60" />
           K
         </kbd>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl overflow-hidden border-border/75 bg-card/96 p-0 backdrop-blur-2xl">
-          <form onSubmit={submitFirstResult} className="border-b border-border/70 p-3">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                autoFocus
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Type a command or page..."
-                className="h-11 border-border/70 bg-background/80 pl-9"
-              />
-            </div>
-          </form>
-
-          <div className="max-h-[60vh] overflow-y-auto p-2">
-            {filteredCommands.length === 0 ? (
-              <div className="rounded-xl border border-border/70 bg-muted/40 px-4 py-8 text-center text-sm text-muted-foreground">
-                No command found for &quot;{query}&quot;.
+        <DialogContent className="max-w-2xl overflow-hidden border-none bg-transparent p-0 shadow-none ring-0 focus-visible:ring-0 top-[20%] translate-y-0">
+          <div className="bg-card m-1 rounded-[32px] overflow-hidden shadow-2xl border border-border">
+            <div className="relative border-b border-border p-4 px-6">
+              <div className="flex items-center gap-3">
+                <Search className="h-5 w-5 text-primary opacity-80" />
+                <Input
+                  autoFocus
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      if (filteredCommands.length > 0 && query.length < 5) {
+                        runCommand(filteredCommands[0].href);
+                      } else {
+                        handleAiSearch(e as any);
+                      }
+                    }
+                  }}
+                  placeholder="Ask AI or type a command..."
+                  className="h-12 border-none bg-transparent p-0 text-lg font-medium placeholder:text-muted-foreground/40 focus-visible:ring-0 shadow-none ring-0"
+                />
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-primary/10 text-primary border-transparent rounded-full px-3 text-[10px] tracking-widest shrink-0">
+                    Smart
+                  </Badge>
+                  {aiLoading && <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />}
+                </div>
               </div>
-            ) : (
-              filteredCommands.map((item) => {
-                const Icon = item.icon;
-                const isCurrent = pathname === item.href;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => runCommand(item.href)}
-                    className="flex w-full items-start justify-between gap-3 rounded-xl border border-transparent px-3 py-3 text-left transition hover:border-border/70 hover:bg-accent/50"
-                  >
-                    <div className="flex min-w-0 items-start gap-3">
-                      <span className="mt-0.5 rounded-lg border border-border/70 bg-background/80 p-1.5">
-                        <Icon className="h-4 w-4 text-primary" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium text-foreground">{item.label}</span>
-                        <span className="block truncate text-xs text-muted-foreground">{item.description}</span>
-                      </span>
-                    </div>
-                    {isCurrent && (
-                      <Badge variant="outline" className="text-[10px]">
-                        Current
-                      </Badge>
-                    )}
-                  </button>
-                );
-              })
-            )}
-          </div>
+            </div>
 
-          <div className="flex items-center justify-between border-t border-border/70 px-4 py-2 text-[11px] text-muted-foreground">
-            <span>Enter to open first result</span>
-            <span className="hidden sm:inline">Use Cmd/Ctrl + K to reopen</span>
+            <div className="max-h-[60vh] overflow-y-auto p-3 space-y-4">
+              {/* AI Wisdom Section */}
+              {(lastAiResponse || aiLoading) && (
+                <div className="mx-1 rounded-2xl bg-primary/10 border border-primary/20 p-5 space-y-3 relative group">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Sparkles className="h-4 w-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.15em]">{BRAND.assistantName} Insights</span>
+                  </div>
+                  {aiLoading && !lastAiResponse ? (
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground italic">
+                      Checking records...
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed font-medium text-foreground/90 whitespace-pre-wrap">
+                      {lastAiResponse}
+                    </p>
+                  )}
+                  {!aiLoading && lastAiResponse && (
+                     <div className="flex justify-end pt-1">
+                        <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold tracking-widest gap-1 hover:bg-primary/10" onClick={() => setOpen(false)}>
+                          Got it <X className="h-3 w-3" />
+                        </Button>
+                     </div>
+                  )}
+                </div>
+              )}
+
+              {/* Navigation Suggestions */}
+              <div className="space-y-1.5 pt-1">
+                <div className="px-3 pb-2">
+                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Navigation & Commands</span>
+                </div>
+                {filteredCommands.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-sm text-muted-foreground/60">
+                    No matching pages found.
+                  </div>
+                ) : (
+                  filteredCommands.map((item) => {
+                    const Icon = item.icon;
+                    const isCurrent = pathname === item.href;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => runCommand(item.href)}
+                        className={cn(
+                          "flex w-full items-center justify-between gap-4 rounded-2xl border border-transparent px-4 py-3 text-left transition-all duration-300",
+                          "hover:bg-white/10 hover:border-white/10 group active:scale-[0.985]"
+                        )}
+                      >
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div className="rounded-xl bg-white/5 border border-white/10 p-2 group-hover:scale-110 group-hover:bg-primary/20 group-hover:border-primary/30 transition-all">
+                            <Icon className="h-4.5 w-4.5 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="block truncate text-sm font-bold text-foreground leading-none group-hover:text-primary transition-colors">{item.label}</span>
+                            <span className="mt-1 block truncate text-xs font-medium text-muted-foreground/70">{item.description}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           {isCurrent ? (
+                             <Badge variant="outline" className="text-[9px] uppercase tracking-widest border-primary/20 bg-primary/5 text-primary/80">
+                               Location
+                             </Badge>
+                           ) : (
+                             <ArrowUpRight className="h-4 w-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+                           )}
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-white/10 bg-white/5 px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+              <div className="flex gap-4">
+                 <span className="flex items-center gap-1.5"><kbd className="rounded bg-white/10 px-1 py-0.5 border border-white/10">⏎</kbd> Navigate</span>
+                 <span className="flex items-center gap-1.5"><kbd className="rounded bg-white/10 px-1 py-0.5 border border-white/10">ESC</kbd> Close</span>
+              </div>
+              <span className="hidden sm:inline italic">Search results from campus knowledge base</span>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
     </>
   );
 }
+

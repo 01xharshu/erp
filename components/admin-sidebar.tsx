@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, BookOpen, LogOut, Menu, X, IndianRupee, ShieldCheck, Lock } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, LogOut, IndianRupee, ShieldCheck, ShieldAlert, Calendar, ClipboardList, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { logout } from "@/lib/auth";
@@ -12,16 +12,20 @@ import { BRAND } from "@/lib/brand";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
+  { icon: ShieldCheck, label: "Admins", href: "/admin/admins" },
   { icon: Users, label: "Students", href: "/admin/students" },
   { icon: BookOpen, label: "Faculty", href: "/admin/faculty" },
   { icon: IndianRupee, label: "Fees", href: "/admin/fees" },
+  { icon: ClipboardList, label: "Attendance", href: "/admin/attendance" },
+  { icon: Calendar, label: "Timetable", href: "/admin/timetable" },
+  { icon: UserPlus, label: "Admissions", href: "/admin/admissions" },
+  { icon: ShieldAlert, label: "Settings", href: "/admin/settings" },
 ];
 
 export function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const isDemoMode = pathname.startsWith("/demo");
 
   const handleLogout = () => {
     logout();
@@ -29,18 +33,15 @@ export function AdminSidebar() {
     router.push("/login");
   };
 
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener("open-sidebar", handleOpen);
+    return () => window.removeEventListener("open-sidebar", handleOpen);
+  }, []);
+
   return (
     <>
-      <div className="md:hidden fixed top-[max(0.75rem,env(safe-area-inset-top))] left-4 z-[95]">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsOpen((prev) => !prev)}
-          className="h-10 w-10 rounded-full border-border/70 bg-card shadow-sm backdrop-blur dark:bg-card/85"
-        >
-          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
-      </div>
+
 
       {isOpen && (
         <div
@@ -51,25 +52,25 @@ export function AdminSidebar() {
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-[90] h-full w-64 border-r border-border/70 bg-card backdrop-blur-xl transition-transform duration-300 dark:bg-card/92 md:absolute md:inset-y-0 md:left-0",
-          "md:translate-x-0",
+          "hidden md:flex fixed left-0 top-0 z-40 h-dvh w-64 border-r md:border-transparent border-border bg-card transition-transform duration-500 ease-in-out",
+          "md:absolute md:inset-y-0 md:h-auto shadow-[1px_0_10px_rgba(0,0,0,0.03)] focus-within:outline-none",
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
-        <div className="flex flex-col h-full">
-          <div className="border-b border-border/70 p-5">
-            <div className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-ring/10 to-amber-400/10 p-3">
-              <div className="rounded-xl bg-primary/15 p-2 text-primary">
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="border-b border-border p-5 shrink-0 bg-transparent">
+            <div className="flex items-center gap-3 rounded-2xl border border-border/50 bg-secondary/50 p-3">
+              <div className="rounded-xl bg-primary p-2 text-primary-foreground shadow-sm">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <h1 className="truncate text-base font-semibold text-foreground">{BRAND.name}</h1>
-                <p className="text-[11px] text-muted-foreground">Admin Workspace</p>
+                <h1 className="text-foreground text-base font-bold leading-none tracking-tight">{BRAND.name}</h1>
+                <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mt-1">Admin Ops</p>
               </div>
             </div>
           </div>
 
-          <nav className="relative flex-1 space-y-1.5 overflow-y-auto p-3">
+          <nav className="relative flex-1 space-y-1.5 overflow-y-auto p-4 scrollbar-hide">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
@@ -80,42 +81,33 @@ export function AdminSidebar() {
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
+                    "group relative flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition-all duration-300",
                     isActive
-                      ? "bg-gradient-to-r from-primary/20 via-ring/15 to-transparent text-primary shadow-sm"
-                      : "text-foreground/70 hover:bg-accent/70 hover:text-foreground"
+                      ? "text-primary font-semibold bg-primary/[0.04]"
+                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
                   )}
                 >
-                  <Icon className={cn("h-[18px] w-[18px]", isActive ? "text-primary" : "text-muted-foreground")} />
+                  {isActive && (
+                    <div className="absolute left-0 top-1/2 h-1/2 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
+                  )}
+                  <Icon className={cn("h-[18px] w-[18px] transition-transform group-hover:scale-110", isActive ? "text-primary" : "text-muted-foreground")} />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
-
-            {isDemoMode && (
-              <>
-                <div className="pointer-events-none absolute inset-x-2 bottom-2 top-[44%] rounded-2xl bg-gradient-to-b from-background/0 via-background/55 to-background/95 backdrop-blur-[6px]" />
-                <div className="pointer-events-none absolute inset-x-4 top-[56%] rounded-2xl border border-border/75 bg-card p-3 text-center shadow-[0_14px_28px_-20px_rgba(2,6,23,0.75)] backdrop-blur-xl dark:bg-card/82">
-                  <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/14 text-primary">
-                    <Lock className="h-4 w-4" />
-                  </div>
-                  <p className="text-xs font-semibold text-foreground">Admin Demo</p>
-                  <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                    Full admin workflows are available after authenticated login.
-                  </p>
-                </div>
-              </>
-            )}
           </nav>
 
-          <div className="border-t border-border/70 p-4">
+          {/* Logout Button - Pinned at bottom left */}
+          <div className="p-4 shrink-0 bg-transparent mt-auto border-t border-border pb-6 md:pb-4">
             <Button
               onClick={handleLogout}
-              variant="outline"
-              className="w-full justify-start gap-2 rounded-xl border-destructive/35 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              variant="ghost"
+              className="w-full justify-start gap-3 rounded-xl border border-transparent text-destructive hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
             >
-              <LogOut className="h-4 w-4" />
-              Logout
+              <div className="rounded-lg bg-destructive/10 p-1.5">
+                <LogOut className="h-4 w-4" />
+              </div>
+              <span className="font-bold tracking-tight">Sign Out</span>
             </Button>
           </div>
         </div>
