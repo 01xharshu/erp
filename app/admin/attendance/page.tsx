@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getAuthToken } from "@/lib/auth";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, UserX, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, CheckCircle2, UserX, ChevronLeft, ChevronRight, ClipboardList } from "lucide-react";
 
 interface StudentRecord {
   _id: string;
