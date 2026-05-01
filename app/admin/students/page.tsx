@@ -596,7 +596,7 @@ export default function StudentManagement() {
               <SelectTrigger className="rounded-xl"><SelectValue placeholder="Department" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Departments</SelectItem>
-                {[...new Set(students.map(s => s.department))].sort().map(d => (
+                {[...new Set(students.map(s => s.department).filter(Boolean))].sort().map(d => (
                   <SelectItem key={d} value={d}>{d}</SelectItem>
                 ))}
               </SelectContent>

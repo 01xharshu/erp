@@ -430,7 +430,7 @@ export default function FacultyManagement() {
               <SelectTrigger className="rounded-xl"><SelectValue placeholder="Department" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Departments</SelectItem>
-                {[...new Set(faculty.map(f => f.department))].sort().map(d => (
+                {[...new Set(faculty.map(f => f.department).filter(Boolean))].sort().map(d => (
                   <SelectItem key={d} value={d}>{d}</SelectItem>
                 ))}
               </SelectContent>
@@ -439,7 +439,7 @@ export default function FacultyManagement() {
               <SelectTrigger className="rounded-xl"><SelectValue placeholder="Designation" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Designations</SelectItem>
-                {[...new Set(faculty.map(f => f.designation))].sort().map(d => (
+                {[...new Set(faculty.map(f => f.designation).filter(Boolean))].sort().map(d => (
                   <SelectItem key={d} value={d}>{d}</SelectItem>
                 ))}
               </SelectContent>
@@ -448,7 +448,7 @@ export default function FacultyManagement() {
               <SelectTrigger className="rounded-xl"><SelectValue placeholder="Specialization" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Specializations</SelectItem>
-                {[...new Set(faculty.map(f => f.specialization))].sort().map(s => (
+                {[...new Set(faculty.map(f => f.specialization).filter(Boolean))].sort().map(s => (
                   <SelectItem key={s} value={s}>{s}</SelectItem>
                 ))}
               </SelectContent>
