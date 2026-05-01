@@ -13,14 +13,11 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { getAuthToken, getUserRole, isAuthenticated, getUserData } from "@/lib/auth";
+import { getUserRole, isAuthenticated, getUserData } from "@/lib/auth";
 import { toast } from "sonner";
 import { BRAND } from "@/lib/brand";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +39,6 @@ interface ChatSession {
 }
 
 export default function AIAssistantPage() {
-  const router = useRouter();
   const [role, setRole] = useState<ChatRole>("student");
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);

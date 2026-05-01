@@ -60,6 +60,10 @@ export default function AttendancePage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedMonth, setSelectedMonth] = useState("January");
 
+  // Marking Pagination
+  const [markingPage, setMarkingPage] = useState(1);
+  const studentsPerPage = 20;
+
   const userData = getStudentData() as any;
   const isFaculty = userData?.role === "faculty";
 
@@ -233,7 +237,7 @@ export default function AttendancePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Today's Schedule</CardTitle>
+            <CardTitle>Today&apos;s Schedule</CardTitle>
             <CardDescription>Select a class to mark attendance for today ({new Date().toDateString()})</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -260,6 +264,24 @@ export default function AttendancePage() {
                     </DialogHeader>
                     
                     <div className="space-y-4 py-4">
+                      <div className="flex items-center justify-between gap-4 mb-2">
+                        <p className="text-sm font-medium">Total Students: {studentsInClass.length}</p>
+                        <div className="flex items-center gap-2">
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                disabled={markingPage === 1} 
+                                onClick={() => setMarkingPage(p => p - 1)}
+                            >Previous</Button>
+                            <span className="text-xs">Page {markingPage} of {Math.ceil(studentsInClass.length / studentsPerPage)}</span>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                disabled={markingPage >= Math.ceil(studentsInClass.length / studentsPerPage)} 
+                                onClick={() => setMarkingPage(p => p + 1)}
+                            >Next</Button>
+                        </div>
+                      </div>
                       <div className="rounded-xl border border-border overflow-hidden">
                         <table className="w-full text-sm">
                           <thead className="bg-muted/50">
@@ -270,7 +292,7 @@ export default function AttendancePage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {studentsInClass.map((student) => (
+                            {studentsInClass.slice((markingPage - 1) * studentsPerPage, markingPage * studentsPerPage).map((student) => (
                               <tr key={student.enrollmentNo} className="border-t border-border hover:bg-muted/30">
                                 <td className="p-3 font-mono text-xs">{student.enrollmentNo}</td>
                                 <td className="p-3 font-medium">{student.firstName} {student.lastName}</td>

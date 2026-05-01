@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Home, Compass, LayoutGrid, Bell, User, Users, IndianRupee, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getUserRole } from "@/lib/auth";

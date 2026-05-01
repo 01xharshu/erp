@@ -632,7 +632,7 @@ export default function TimetableManagement() {
               Precautionary Warning
             </DialogTitle>
             <DialogDescription className="font-medium text-foreground">
-              Are you sure you want to remove {deleteTarget?.type} <span className="font-bold underline">"{deleteTarget?.value}"</span>?
+              Are you sure you want to remove {deleteTarget?.type} <span className="font-bold underline">&quot;{deleteTarget?.value}&quot;</span>?
             </DialogDescription>
           </DialogHeader>
           <div className="bg-destructive/5 p-4 rounded-xl border border-destructive/10 text-sm text-destructive font-medium">

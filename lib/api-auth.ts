@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 import { decodeSessionToken, getBearerToken, SessionPayload } from "@/lib/session";
 
 export function getSessionFromRequest(request: NextRequest): SessionPayload | null {
-  const token = getBearerToken(request);
+  let token: string | undefined | null = request.cookies.get("erp_auth_token")?.value;
+  
+  if (!token) {
+    token = getBearerToken(request);
+  }
+
   if (!token) {
     return null;
   }

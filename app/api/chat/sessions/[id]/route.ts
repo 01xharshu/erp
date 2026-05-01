@@ -3,7 +3,7 @@ import { getDatabase } from "@/lib/mongodb";
 import { findChatSessionById, updateChatSessionMessages } from "@/lib/db-models";
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

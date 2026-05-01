@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Bot, History, Maximize2, Send, Sparkles, X, MessageSquare, ArrowLeft, Plus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -286,7 +286,7 @@ export function ChatbotWidget() {
     sendChat(value);
   };
 
-  const roleBadge = useMemo(() => role.charAt(0).toUpperCase() + role.slice(1), [role]);
+  // Removed roleBadge since it's unused
 
   // ── Reminder polling ────────────────────────────────────────────────────
   const markReminderStatus = useCallback(async (token: string, reminderId: string, newStatus: ReminderStatus) => {
@@ -366,7 +366,7 @@ export function ChatbotWidget() {
               <div className="flex items-center gap-1.5 md:gap-2">
                 <Bot className="h-4 w-4 text-primary shrink-0" />
                 <span className="text-[13px] font-bold truncate max-w-[90px] md:max-w-none">
-                  {view === "chat" ? (BRAND.assistantName === "AI Assistant" ? "Assistant" : BRAND.assistantName) : "History"}
+                  {view === "chat" ? (BRAND.assistantName === "AI Assistant" as any ? "Assistant" : BRAND.assistantName) : "History"}
                 </span>
               </div>
               <div className="flex items-center gap-1">

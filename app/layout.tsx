@@ -1,13 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";  // ← Add this import
+import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import { BRAND } from "@/lib/brand";
+import { cookies } from "next/headers";
+import { decodeSessionToken } from "@/lib/session";
+import { AuthSynchronizer } from "@/components/auth-synchronizer";
 
 const googleSans = localFont({
   src: [
-    // Base versions (these match your non-17pt files – use them primarily)
     {
       path: "../public/fonts/Google_Sans/static/GoogleSans-Regular.ttf",
       weight: "400",
@@ -24,7 +26,7 @@ const googleSans = localFont({
       style: "normal",
     },
     {
-      path: "../public/fonts/Google_Sans/static/GoogleSans-MediumItalic.ttf",  // Fix typo if your file is actually "MediumItalic.ttf" (no extra 'l')
+      path: "../public/fonts/Google_Sans/static/GoogleSans-MediumItalic.ttf",
       weight: "500",
       style: "italic",
     },
@@ -48,20 +50,9 @@ const googleSans = localFont({
       weight: "700",
       style: "italic",
     },
-
-    // Optional: Add 17pt optical size variants only if you need them for small text
-    // These are optimized for ~16-17px sizes (thinner strokes, better legibility at small px)
-    // Skip for now unless you're using very small fonts (e.g., captions, UI labels)
-    // {
-    //   path: "../public/fonts/Google_Sans/static/GoogleSans_17pt-Regular.ttf",
-    //   weight: "400",
-    //   style: "normal",
-    // },
-    // ... add others similarly if desired
   ],
   variable: "--font-google-sans",
   display: "swap",
-  // Optional: preload: true,  // default is true anyway
 });
 
 export const metadata: Metadata = {
@@ -78,36 +69,42 @@ export const viewport: Viewport = {
   themeColor: "#0F8A66",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("erp_auth_token")?.value || null;
+  const session = token ? decodeSessionToken(token) : null;
+
   return (
     <html
       lang="en"
       suppressHydrationWarning
-      className={googleSans.variable}  // Applies the font var globally
+      className={googleSans.variable}
     >
-      <body className="font-sans antialiased">  {/* font-sans now uses Google Sans via var */}
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster 
-            position="bottom-left" 
-            closeButton 
-            richColors 
-            theme="system" 
-            expand={true}
-            visibleToasts={6}
-            toastOptions={{
-              className: "liquid-glass rounded-2xl border-white/10 shadow-2xl saturate-[1.5] brightness-[1.05]",
-              style: {
-                background: "rgba(255, 255, 255, 0.45)",
-                backdropFilter: "blur(32px) saturate(190%)",
-              }
-            }}
-          />
-        </ThemeProvider>
+      <body className="font-sans antialiased">
+        <AuthSynchronizer session={session} token={token}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            {children}
+            <Toaster 
+              position="bottom-left" 
+              closeButton 
+              richColors 
+              theme="system" 
+              expand={true}
+              visibleToasts={6}
+              toastOptions={{
+                className: "liquid-glass rounded-2xl border-white/10 shadow-2xl saturate-[1.5] brightness-[1.05]",
+                style: {
+                  background: "rgba(255, 255, 255, 0.45)",
+                  backdropFilter: "blur(32px) saturate(190%)",
+                }
+              }}
+            />
+          </ThemeProvider>
+        </AuthSynchronizer>
       </body>
     </html>
   );

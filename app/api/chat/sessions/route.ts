@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
 import { createChatSession, findChatSessionsByUser, deleteChatSession } from "@/lib/db-models";
-import { getUserData } from "@/lib/auth"; // This is client-side, but I can't use it in route.ts easily. I'll pass userId in body.
+// This is client-side, but I can't use it in route.ts easily. I'll pass userId in body.
 
 export async function GET(req: Request) {
   try {

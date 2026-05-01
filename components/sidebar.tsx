@@ -13,13 +13,10 @@ import {
   Building2,
   Megaphone,
   LogOut,
-  Menu,
-  X,
   Clock,
   Home,
   GraduationCap,
-  Sparkles,
-  Bot
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/auth";

@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
     const db = await getDatabase();
     // Use enrollmentNo or employeeId for userId
     const userId = auth.enrollmentNo || auth.employeeId;
+    if (!userId) return NextResponse.json({ success: false, error: "Missing userId" });
     const reminders = await getUserReminders(db, userId);
     return NextResponse.json({ success: true, data: reminders });
   } catch (error: any) {
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest) {
     const { reminderId, status } = await req.json();
     const db = await getDatabase();
     const userId = auth.enrollmentNo || auth.employeeId;
+    if (!userId) return NextResponse.json({ success: false, error: "Missing userId" });
     await updateReminderStatus(db, userId, reminderId, status);
     return NextResponse.json({ success: true });
   } catch (error: any) {

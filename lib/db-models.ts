@@ -107,6 +107,7 @@ export interface Student {
   admissionDate?: string;
   lastLogin?: string;
   role: "student";
+  status?: "Active" | "Debarred" | "Suspended";
   createdAt: Date;
   updatedAt: Date;
   resetCode?: string;

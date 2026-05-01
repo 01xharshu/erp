@@ -41,12 +41,7 @@ function cosineSimilarity(A: number[], B: number[]) {
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-interface KBDocument {
-  _id?: any;
-  content: string;
-  embedding: number[];
-  source: string;
-}
+
 
 export async function retrieveContext(query: string, role: string = "student", limit = 10): Promise<string> {
   const queryEmbedding = await generateNomicEmbedding(query);

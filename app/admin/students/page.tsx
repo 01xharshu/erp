@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit2, Trash2 } from "lucide-react";
@@ -129,9 +130,14 @@ export default function StudentManagement() {
     }
   }, [getAuthHeaders]);
 
+  const searchParams = useSearchParams();
+  
   useEffect(() => {
     void fetchMeta();
-  }, [fetchMeta]);
+    if (searchParams?.get("action") === "add") {
+      setIsModalOpen(true);
+    }
+  }, [fetchMeta, searchParams]);
 
   const fetchStudents = useCallback(async () => {
     try {
@@ -540,7 +546,7 @@ export default function StudentManagement() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="guardianName">Father's / Guardian's Name</Label>
+                      <Label htmlFor="guardianName">Father&apos;s / Guardian&apos;s Name</Label>
                       <Input
                         id="guardianName"
                         placeholder="Mr. Robert Doe"
@@ -550,7 +556,7 @@ export default function StudentManagement() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="guardianPhone">Guardian's Contact</Label>
+                      <Label htmlFor="guardianPhone">Guardian&apos;s Contact</Label>
                       <Input
                         id="guardianPhone"
                         placeholder="+1 (555) 111-2222"

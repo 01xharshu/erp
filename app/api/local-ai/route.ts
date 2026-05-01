@@ -6,7 +6,7 @@ const OLLAMA_BASE = "http://127.0.0.1:11434";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { messages, role = "student", uniqueId = "anonymous", userData, fastMode = false } = body;
+    const { messages, role = "student", userData, fastMode = false } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: "No messages provided" }), {

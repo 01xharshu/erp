@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
       lastName: authUser.lastName,
     });
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
         token,
@@ -170,6 +170,18 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
+
+    response.cookies.set({
+      name: "erp_auth_token",
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+    });
+
+    return response;
   } catch (error) {
     console.error("[v0] Auth error:", error);
     return NextResponse.json(

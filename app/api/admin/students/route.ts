@@ -242,6 +242,7 @@ export async function PUT(request: NextRequest) {
       guardianPhone: body.guardianPhone !== undefined ? String(body.guardianPhone).trim() : existing.guardianPhone,
       photoURL: body.photoURL !== undefined ? String(body.photoURL).trim() : existing.photoURL,
       admissionDate: body.admissionDate !== undefined ? String(body.admissionDate).trim() : existing.admissionDate,
+      status: body.status !== undefined ? body.status : existing.status,
       lastLogin: existing.lastLogin,
     });
 

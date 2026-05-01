@@ -108,41 +108,47 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Students</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{isLoading ? "..." : stats.students}</div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Active student accounts
-            </p>
-          </CardContent>
-        </Card>
+        <Link href="/admin/students" className="transition-transform hover:-translate-y-1 hover:shadow-lg rounded-xl block">
+          <Card className="h-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Students</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{isLoading ? "..." : stats.students}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Active student accounts
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Faculties</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{isLoading ? "..." : stats.faculty}</div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Staff accounts
-            </p>
-          </CardContent>
-        </Card>
+        <Link href="/admin/faculty" className="transition-transform hover:-translate-y-1 hover:shadow-lg rounded-xl block">
+          <Card className="h-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Faculties</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{isLoading ? "..." : stats.faculty}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Staff accounts
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Admins</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{isLoading ? "..." : stats.admins}</div>
-            <p className="text-xs text-muted-foreground mt-2">
-              System managers
-            </p>
-          </CardContent>
-        </Card>
+        <Link href="/admin/admins" className="transition-transform hover:-translate-y-1 hover:shadow-lg rounded-xl block">
+          <Card className="h-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Admins</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{isLoading ? "..." : stats.admins}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                System managers
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
         <Card>
           <CardHeader className="pb-3">
@@ -154,35 +160,41 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Collected</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">₹{isLoading ? "..." : stats.totalCollected}</div>
-            <p className="text-xs text-muted-foreground mt-2">Settled fee amount</p>
-          </CardContent>
-        </Card>
+        <Link href="/admin/fees" className="transition-transform hover:-translate-y-1 hover:shadow-lg rounded-xl block">
+          <Card className="h-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Collected</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">₹{isLoading ? "..." : stats.totalCollected}</div>
+              <p className="text-xs text-muted-foreground mt-2">Settled fee amount</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Pending Fees</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600">₹{isLoading ? "..." : stats.pendingFees}</div>
-            <p className="text-xs text-muted-foreground mt-2">Outstanding dues</p>
-          </CardContent>
-        </Card>
+        <Link href="/admin/fees?filter=pending" className="transition-transform hover:-translate-y-1 hover:shadow-lg rounded-xl block">
+          <Card className="h-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Pending Fees</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-amber-600">₹{isLoading ? "..." : stats.pendingFees}</div>
+              <p className="text-xs text-muted-foreground mt-2">Outstanding dues</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Overdue Items</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{isLoading ? "..." : stats.overdueCount}</div>
-            <p className="text-xs text-muted-foreground mt-2">Require immediate follow-up</p>
-          </CardContent>
-        </Card>
+        <Link href="/admin/fees?filter=overdue" className="transition-transform hover:-translate-y-1 hover:shadow-lg rounded-xl block">
+          <Card className="h-full border-red-500/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Overdue Items</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{isLoading ? "..." : stats.overdueCount}</div>
+              <p className="text-xs text-muted-foreground mt-2">Require immediate follow-up</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <Card>
@@ -223,14 +235,14 @@ export default function AdminDashboard() {
               <span className="text-xs font-medium text-center">Timetable</span>
             </Link>
             <Link
-              href="/admin/students"
+              href="/admin/students?action=add"
               className="flex flex-col items-center gap-2 rounded-xl border border-border/75 bg-background/70 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10"
             >
               <UserPlus className="h-6 w-6 text-primary" />
               <span className="text-xs font-medium text-center">Add Student</span>
             </Link>
             <Link
-              href="/admin/faculty"
+              href="/admin/faculty?action=add"
               className="flex flex-col items-center gap-2 rounded-xl border border-border/75 bg-background/70 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10"
             >
               <UserPlus className="h-6 w-6 text-primary" />

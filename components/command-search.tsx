@@ -64,7 +64,6 @@ const getCommands = (role: AppRole): CommandItem[] => {
   return studentCommands;
 };
 
-import { useChat } from "@ai-sdk/react";
 import { Sparkles, Loader2, ArrowUpRight } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 
@@ -85,10 +84,8 @@ export function CommandSearch({
     setMounted(true);
   }, []);
 
-  const { messages, append, isLoading: aiLoading } = useChat({
-    api: "/api/ai/chat",
-    initialMessages: [],
-  });
+  const [messages, setMessages] = useState<{role: string, content: string}[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const commands = useMemo(() => getCommands(role), [role]);
 
@@ -117,6 +114,7 @@ export function CommandSearch({
   useEffect(() => {
     if (!open) {
       setQuery("");
+      setMessages([]);
     }
   }, [open]);
 
@@ -129,13 +127,33 @@ export function CommandSearch({
 
   const handleAiSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim()) return;
+    if (!query.trim() || aiLoading) return;
     
-    // Clear previous AI messages
-    append({
-      role: "user",
-      content: `Context search for: ${query}`,
-    });
+    setAiLoading(true);
+    const newMsg = { role: "user", content: `Context search for: ${query}` };
+    setMessages([newMsg]);
+    
+    try {
+      const res = await fetch("/api/local-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [newMsg],
+          role: role,
+          fastMode: true
+        })
+      });
+      
+      const data = await res.json();
+      if (data.response) {
+        setMessages([newMsg, { role: "assistant", content: data.response }]);
+      }
+    } catch (error) {
+      console.error(error);
+      setMessages([newMsg, { role: "assistant", content: "Failed to connect to AI service." }]);
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const lastAiResponse = useMemo(() => {

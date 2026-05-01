@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, BookOpen, LogOut, IndianRupee, ShieldCheck, ShieldAlert, Calendar, ClipboardList, UserPlus, Bus } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, LogOut, IndianRupee, ShieldCheck, ShieldAlert, Calendar, ClipboardList, UserPlus, Bus, Briefcase, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { logout } from "@/lib/auth";
@@ -19,7 +19,9 @@ const menuItems = [
   { icon: IndianRupee, label: "Salary", href: "/admin/salary" },
   { icon: ClipboardList, label: "Attendance", href: "/admin/attendance" },
   { icon: Calendar, label: "Timetable", href: "/admin/timetable" },
+  { icon: FileSpreadsheet, label: "Exams", href: "/admin/exams" },
   { icon: UserPlus, label: "Admissions", href: "/admin/admissions" },
+  { icon: Briefcase, label: "Placement", href: "/admin/placement" },
   { icon: Bus, label: "Transport", href: "/admin/bus" },
   { icon: ShieldAlert, label: "Settings", href: "/admin/settings" },
 ];

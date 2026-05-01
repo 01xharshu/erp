@@ -44,6 +44,10 @@ export default function AdminAdmissionsPage() {
   const [filterDept, setFilterDept] = useState("all");
   const [filterSemType, setFilterSemType] = useState("all");
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
   const getAuthHeaders = useCallback((): HeadersInit => {
     const token = getAuthToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -114,6 +118,16 @@ export default function AdminAdmissionsPage() {
 
   const currentList = activeTab === "new" ? newAdmissions : activeTab === "semester" ? students : blockedStudents;
   const filtered = getFilteredList(currentList);
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(start, start + itemsPerPage);
+  }, [filtered, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterDept, filterSemType, activeTab]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center p-8">Loading...</div>;
@@ -239,7 +253,7 @@ export default function AdminAdmissionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((s) => {
+                {paginatedData.map((s) => {
                   const feeStatus = studentFeeStatus[s.enrollmentNo];
                   const isBlocked = feeStatus && (feeStatus.overdueCount > 0 || feeStatus.totalDue > 10000);
                   return (
@@ -273,6 +287,16 @@ export default function AdminAdmissionsPage() {
                 })}
               </TableBody>
             </Table>
+
+            {filtered.length > itemsPerPage && (
+                <div className="flex items-center justify-between mt-4 border-t pt-4">
+                    <p className="text-xs text-muted-foreground">Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length}</p>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Previous</Button>
+                        <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</Button>
+                    </div>
+                </div>
+            )}
 
             {filtered.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">No students match the current filters.</div>

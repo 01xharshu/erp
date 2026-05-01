@@ -15,18 +15,35 @@ export interface SessionPayload {
   lastName?: string;
 }
 
+import * as crypto from "crypto";
+
+const SECRET = process.env.JWT_SECRET || "fallback_unsafe_secret_for_dev_only_12345";
+
 export function createSessionToken(payload: Omit<SessionPayload, "issuedAt">): string {
   const value: SessionPayload = {
     ...payload,
     issuedAt: Date.now(),
   };
 
-  return Buffer.from(JSON.stringify(value)).toString("base64url");
+  const data = Buffer.from(JSON.stringify(value)).toString("base64url");
+  const signature = crypto.createHmac("sha256", SECRET).update(data).digest("base64url");
+  return `${data}.${signature}`;
 }
 
 export function decodeSessionToken(token: string): SessionPayload | null {
   try {
-    const parsed = JSON.parse(Buffer.from(token, "base64url").toString("utf8")) as Partial<SessionPayload>;
+    const parts = token.split(".");
+    if (parts.length !== 2) return null;
+    
+    const [data, signature] = parts;
+    const expectedSignature = crypto.createHmac("sha256", SECRET).update(data).digest("base64url");
+    
+    // Constant time comparison to prevent timing attacks
+    if (signature.length !== expectedSignature.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+      return null;
+    }
+
+    const parsed = JSON.parse(Buffer.from(data, "base64url").toString("utf8")) as Partial<SessionPayload>;
 
     if (
       typeof parsed.userId !== "string" ||

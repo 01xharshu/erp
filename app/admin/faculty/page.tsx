@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit2, Trash2 } from "lucide-react";
@@ -106,9 +107,14 @@ export default function FacultyManagement() {
     }
   }, [getAuthHeaders]);
 
+  const searchParams = useSearchParams();
+  
   useEffect(() => {
     void fetchMeta();
-  }, [fetchMeta]);
+    if (searchParams?.get("action") === "add") {
+      setIsModalOpen(true);
+    }
+  }, [fetchMeta, searchParams]);
 
   const updateRemoteMeta = async (updates: any) => {
     try {
