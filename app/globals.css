@@ -120,7 +120,6 @@
   }
 }
 
-/* Hide scrollbars globally while preserving scroll behavior */
 * {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -132,7 +131,7 @@
   display: none;
 }
 
-/* Print styles */
+
 @media print {
   body {
     @apply bg-white text-black;
@@ -147,7 +146,7 @@
   }
 }
 
-/* Animations */
+
 @keyframes slideInFromLeft {
   from {
     opacity: 0;
